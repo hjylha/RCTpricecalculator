@@ -1,0 +1,132 @@
+
+MainWidget:
+
+<MainWidget>:
+    MainScreen:
+        size: root.size
+
+<MainScreen>:
+    orientation: "vertical"
+    # spacing: dp(20), dp(20)
+    Label:
+        text: "RollerCoaster Tycoon Max Price Calculator"
+        # size: self.width, dp(50)
+        height: dp(50)
+        size_hint: 0.4, None
+        pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    DescriptionText:
+        height: dp(75)
+        size_hint: 0.6, None
+        pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    InputSection:
+        height: dp(200)
+        size_hint: 0.8, None
+        pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    # RideSelection:
+    #     size_hint: 0.8, 1
+    # ExcitementSelection:
+    #     size_hint: 0.8, 1
+    # IntensitySelection:
+    #     size_hint: 0.8, 1
+    # NauseaSelection:
+    #     size_hint: 0.8, 1
+    # PayForEntrySelection:
+    #     size_hint: 0.8, 1
+    
+    Button:
+        text: "Clear"
+        size_hint: 0.2, 0.2
+        pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    
+    PriceTable:
+        size_hint: 1, 1
+
+<DescriptionText>:
+    orientation: "vertical"
+    Label:
+        text: "Enter the stats of your ride below to calculate the maximum price you can charge for your ride."
+        # height: dp(20)
+        size_hint: 1, 0.5
+        pos_hint: { "center_x": .5, "y": 1}
+    Label:
+        text: "Please enter the stats multiplied by 100: for example if your ride has 6.71 excitement," 
+        # height: dp(20)
+        size_hint: 1, 0.5
+        pos_hint: { "center_x": .5, "y": 1}
+    Label:
+        text: "type 671 into the Excitement Rating box."
+        # height: dp(20)
+        size_hint: 1, 0.5
+        pos_hint: { "center_x": .5, "y": 1}
+
+<InputSection>:
+    cols: 2
+    padding: (dp(0), dp(20), dp(0), dp(20))
+    Label:
+        text: "Select the ride type"
+    Button:
+        text: "placeholder"
+    
+    Label:
+        text: "Excitement Rating"
+    TextInput:
+        text: ""
+        multiline: False
+    
+    Label:
+        text: "Intensity Rating"
+    TextInput:
+        text: ""
+        multiline: False
+    
+    Label:
+        text: "Nausea Rating"
+    TextInput:
+        text: ""
+        multiline: False
+    
+    Label:
+        text: "Do you charge for park entry?"
+    ToggleButton:
+        text: "No"
+    
+
+<RideSelection>:
+    Label:
+        text: "Select the ride type"
+
+<ExcitementSelection>:
+    Label:
+        text: "Excitement Rating"
+    TextInput:
+        text: ""
+        multiline: False
+
+<IntensitySelection>:
+    Label:
+        text: "Intensity Rating"
+    TextInput:
+        text: ""
+        multiline: False
+
+<NauseaSelection>:
+    Label:
+        text: "Nausea Rating"
+    TextInput:
+        text: ""
+        multiline: False
+
+<PayForEntrySelection>:
+    Label:
+        text: "Do you charge for park entry?"
+    ToggleButton:
+        text: "No"
+
+<PriceTable>:
+    cols: 3
+    Label:
+        text: "Age"
+    Label:
+        text: "Max Price (openRCT2)"
+    Label:
+        text: "Max Price (classic)"
