@@ -58,10 +58,9 @@ def rounding(num):
 def maximize(num):
     return 2 * num - 10
 
+# create the calculator
 # EIN as integers (i.e. multiplied by 100)
-def calculate_max_price(ride_type, excitement, intensity, nausea, free_entry=True):
-    ride_values = read_ride_values()
-    age_values = read_age_values()
+def calculate_max_prices(ride_values, age_values, ride_type, excitement, intensity, nausea, free_entry=True):
     for ride in ride_values:
         if ride['rideType'].lower() == ride_type.lower():
             e_multiplier = ride['excitementValue']
@@ -97,6 +96,13 @@ def calculate_max_price(ride_type, excitement, intensity, nausea, free_entry=Tru
             new_max_prices.append(tuple(new_price_line))
         max_prices = new_max_prices
     return max_prices
+
+# read data from files and calculate
+def calculate_max_price(ride_type, excitement, intensity, nausea, free_entry=True):
+    ride_values = read_ride_values()
+    age_values = read_age_values()
+    return calculate_max_prices(ride_values, age_values, ride_type, excitement, intensity, nausea, free_entry)
+    
 
 def calculator():
     ride_name = input("What is the ride type? ")
