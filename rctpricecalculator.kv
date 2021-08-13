@@ -8,12 +8,11 @@ MainWidget:
 <MainScreen>:
     orientation: "vertical"
     # spacing: dp(20), dp(20)
-    Label:
-        text: "RollerCoaster Tycoon Max Price Calculator"
-        # size: self.width, dp(50)
-        height: dp(50)
-        size_hint: 0.4, None
-        pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    # Label:
+    #     text: "RollerCoaster Tycoon Max Price Calculator"
+    #     height: dp(50)
+    #     size_hint: 0.4, None
+    #     pos_hint: { "center_x": 0.5, "center_y": 0.5 }
     DescriptionText:
         height: dp(75)
         size_hint: 0.6, None
@@ -35,11 +34,12 @@ MainWidget:
     
     Button:
         text: "Clear"
+        on_press: root.clear_button_pressed()
         size_hint: 0.2, 0.2
         pos_hint: { "center_x": 0.5, "center_y": 0.5 }
     
     PriceTable:
-        size_hint: 1, 1
+        size_hint: 1, 1.5
 
 <DescriptionText>:
     orientation: "vertical"
@@ -89,44 +89,46 @@ MainWidget:
         text: "Do you charge for park entry?"
     ToggleButton:
         text: "No"
+        on_state: root.change_pay_for_entry(self)
     
 
-<RideSelection>:
-    Label:
-        text: "Select the ride type"
+# <RideSelection>:
+#     Label:
+#         text: "Select the ride type"
 
-<ExcitementSelection>:
-    Label:
-        text: "Excitement Rating"
-    TextInput:
-        text: ""
-        multiline: False
+# <ExcitementSelection>:
+#     Label:
+#         text: "Excitement Rating"
+#     TextInput:
+#         text: ""
+#         multiline: False
 
-<IntensitySelection>:
-    Label:
-        text: "Intensity Rating"
-    TextInput:
-        text: ""
-        multiline: False
+# <IntensitySelection>:
+#     Label:
+#         text: "Intensity Rating"
+#     TextInput:
+#         text: ""
+#         multiline: False
 
-<NauseaSelection>:
-    Label:
-        text: "Nausea Rating"
-    TextInput:
-        text: ""
-        multiline: False
+# <NauseaSelection>:
+#     Label:
+#         text: "Nausea Rating"
+#     TextInput:
+#         text: ""
+#         multiline: False
 
-<PayForEntrySelection>:
-    Label:
-        text: "Do you charge for park entry?"
-    ToggleButton:
-        text: "No"
+# <PayForEntrySelection>:
+#     Label:
+#         text: "Do you charge for park entry?"
+#     ToggleButton:
+#         text: "No"
 
 <PriceTable>:
     cols: 3
-    Label:
-        text: "Age"
-    Label:
-        text: "Max Price (openRCT2)"
-    Label:
-        text: "Max Price (classic)"
+    padding: (dp(0), dp(20), dp(0), dp(20))
+    # Label:
+    #     text: "Age"
+    # Label:
+    #     text: "Max Price (openRCT2)"
+    # Label:
+    #     text: "Max Price (classic)"
