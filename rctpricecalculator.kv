@@ -13,14 +13,15 @@ MainWidget:
     #     height: dp(50)
     #     size_hint: 0.4, None
     #     pos_hint: { "center_x": 0.5, "center_y": 0.5 }
-    DescriptionText:
-        height: dp(75)
-        size_hint: 0.6, None
-        pos_hint: { "center_x": 0.5, "center_y": 0.5 }
-    InputSection:
-        height: dp(200)
-        size_hint: 0.8, None
-        pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    # DescriptionText:
+    #     height: dp(75)
+    #     size_hint: 0.6, None
+    #     pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    # InputSection:
+    #     id: inputsection
+    #     height: dp(200)
+    #     size_hint: 0.8, None
+    #     pos_hint: { "center_x": 0.5, "center_y": 0.5 }
     # RideSelection:
     #     size_hint: 0.8, 1
     # ExcitementSelection:
@@ -32,14 +33,28 @@ MainWidget:
     # PayForEntrySelection:
     #     size_hint: 0.8, 1
     
-    Button:
-        text: "Clear"
-        on_press: root.clear_button_pressed()
-        size_hint: 0.2, 0.2
-        pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    # Button:
+    #     text: "Clear"
+    #     on_press: root.clear_button_pressed()
+    #     size_hint: 0.2, 0.2
+    #     pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    # BoxLayout:
+    #     size_hint: 0.6, 0.2
+    #     pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    #     Button:
+    #         text: "Clear"
+    #         on_press: root.clear_button_pressed()
+    #         size_hint: 0.1, 0.8
+    #         pos_hint: { "center_x": 0.5, "center_y": 0.5 }
+    #     Button:
+    #         text: "Calculate"
+    #         on_press: root.calculate_price()
+    #         size_hint: 0.1, 0.8
+    #         pos_hint: { "center_x": 0.5, "center_y": 0.5 }
     
-    PriceTable:
-        size_hint: 1, 1.5
+    # PriceTable:
+    #     id: pricetable
+    #     size_hint: 1, 1.5
 
 <DescriptionText>:
     orientation: "vertical"
@@ -60,30 +75,34 @@ MainWidget:
         pos_hint: { "center_x": .5, "y": 1}
 
 <InputSection>:
+    # id: inputsection
     cols: 2
     padding: (dp(0), dp(20), dp(0), dp(20))
-    Label:
-        text: "Select the ride type"
-    Button:
-        text: "placeholder"
+    # Label:
+    #     text: "Select the ride type"
+    # # Button:
+    # #     text: "placeholder"
+    # TextInput:
+    #     text: root.ride_name
+    #     multiline: False
     
-    Label:
-        text: "Excitement Rating"
-    TextInput:
-        text: ""
-        multiline: False
+    # Label:
+    #     text: "Excitement Rating"
+    # TextInput:
+    #     text: root.excitement_value
+    #     multiline: False
     
-    Label:
-        text: "Intensity Rating"
-    TextInput:
-        text: ""
-        multiline: False
+    # Label:
+    #     text: "Intensity Rating"
+    # TextInput:
+    #     text: root.intensity_value
+    #     multiline: False
     
-    Label:
-        text: "Nausea Rating"
-    TextInput:
-        text: ""
-        multiline: False
+    # Label:
+    #     text: "Nausea Rating"
+    # TextInput:
+    #     text: root.nausea_value
+    #     multiline: False
     
     Label:
         text: "Do you charge for park entry?"
@@ -124,6 +143,7 @@ MainWidget:
 #         text: "No"
 
 <PriceTable>:
+    # id: pricetable
     cols: 3
     padding: (dp(0), dp(20), dp(0), dp(20))
     # Label:
