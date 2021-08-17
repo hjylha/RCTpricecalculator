@@ -6,6 +6,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
+from kivy.uix.togglebutton import ToggleButton
 from kivy.properties import BooleanProperty, StringProperty
 
 from calc import read_ride_values, read_age_values, calculate_max_prices, add_empty_space_at_the_end
@@ -23,10 +24,10 @@ def on_text2(instance, value):
     return value
 
 class InputSection(GridLayout):
-    ride_name = StringProperty("")
-    excitement_value = StringProperty("")
-    intensity_value = StringProperty("")
-    nausea_value = StringProperty("")
+    # ride_name = StringProperty("")
+    # excitement_value = StringProperty("")
+    # intensity_value = StringProperty("")
+    # nausea_value = StringProperty("")
     free_entry_value = BooleanProperty(True)
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -57,6 +58,11 @@ class InputSection(GridLayout):
         self.add_widget(n_label)
         self.nausea_value_box = TextInput(text="", multiline=False, write_tab=False)
         self.add_widget(self.nausea_value_box)
+
+        self.add_widget(Label(text="Do you charge for park entry?"))
+        self.pay_for_entry_btn = ToggleButton(text="No")
+        # self.pay_for_entry_btn.bind(state=self.change_pay_for_entry)
+        self.add_widget(self.pay_for_entry_btn)
         
 
     def clear_input_boxes(self):
@@ -68,7 +74,7 @@ class InputSection(GridLayout):
     def get_input_data(self):
         return (self.ride_name_box.text.lower(), self.excitement_value_box.text)
 
-    def change_pay_for_entry(self, widget):
+    def change_pay_for_entry(self, widget, state):
         if widget.state == "normal":
             widget.text = "No"
             self.free_entry_value = True
@@ -157,7 +163,7 @@ class MainScreen(BoxLayout):
         self.nausea = 0
         self.pricetable.clear_pricetable()
         
-    def calculate_price(self, widget):
+    def calculate_price(self, widget, value=None):
         ride_name = self.inputsection.ride_name_box.text
         try:
             excitement = int(self.inputsection.excitement_value_box.text)
@@ -174,8 +180,8 @@ class MainScreen(BoxLayout):
         max_prices = calculate_max_prices(self.ride_values, self.age_values, ride_name, excitement, intensity, nausea, self.inputsection.free_entry_value)
 
         self.pricetable.write_pricetable(max_prices)
-        for priceline in max_prices:
-            print(priceline)
+        # for priceline in max_prices:
+        #     print(priceline)
 
     
     def __init__(self, **kwargs):
@@ -206,8 +212,21 @@ class MainScreen(BoxLayout):
         self.pricetable = PriceTable(size_hint=(1, 1.5))
         self.add_widget(self.pricetable)
 
+        # calculating prices automatically
         # self.inputsection.ride_name_box.bind(text=on_text2)
+        self.inputsection.excitement_value_box.bind(text=self.calculate_price)
+        self.inputsection.intensity_value_box.bind(text=self.calculate_price)
+        self.inputsection.nausea_value_box.bind(text=self.calculate_price)
+        self.inputsection.pay_for_entry_btn.bind(state=self.change_pay_for_entry)
 
+    def change_pay_for_entry(self, widget, state):
+        if widget.state == "normal":
+            widget.text = "No"
+            self.inputsection.free_entry_value = True
+        else:
+            widget.text = "Yes"
+            self.inputsection.free_entry_value = False
+        self.calculate_price(widget)
     
 
 
@@ -217,4 +236,5 @@ class MainWidget(Widget):
 class RCTPriceCalculatorApp(App):
     pass
 
-RCTPriceCalculatorApp().run()
+if __name__ == "__main__":
+    RCTPriceCalculatorApp().run()
