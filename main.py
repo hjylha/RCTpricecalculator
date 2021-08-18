@@ -7,6 +7,7 @@ from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.dropdown import DropDown
 from kivy.properties import BooleanProperty, StringProperty
 
 from calc import read_ride_values, read_age_values, calculate_max_prices, add_empty_space_at_the_end
@@ -15,13 +16,47 @@ from calc import read_ride_values, read_age_values, calculate_max_prices, add_em
 class DescriptionText(BoxLayout):
     pass
 
-def on_text(instance, value):
-    print("The widget", instance, "has:", value)
-    return value
+class RideTextBox(TextInput):
+    def select_suggestion(self, widget, value):
+        # print("suggestion")
+        # print(widget, "has value", value)
+        if value:
+            self.dropdown.select(widget.text)
+            self.dropdown.dismiss()
+        else:
+            # is this correct?
+            self.dropdown.select(widget.text)
 
-def on_text2(instance, value):
-    print("(2) Widget", instance, "has:", value)
-    return value
+    def make_selection(self, widget, value):
+        # print("selected")
+        # print(widget)
+        # print(value)
+        self.text = value
+        self.focus = True
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.dropdown = DropDown()
+        # 5 suggestions
+        self.num_of_suggestions = 5
+        # readonly = True ??
+        self.suggestions = [TextInput(text="", readonly=True, multiline=False, write_tab=False, size_hint_y=None, height=dp(30)) for _ in range(self.num_of_suggestions)]
+        for suggestion in self.suggestions:
+            suggestion.bind(focus=self.select_suggestion)
+            self.dropdown.add_widget(suggestion)
+            
+        # self.dropdown.bind(on_select=lambda widget, value: setattr(self, 'text', value))
+        self.dropdown.bind(on_select=self.make_selection)
+
+
+# def on_text(instance, value):
+#     print("The widget", instance, "has:", value)
+#     return value
+
+# def on_text2(instance, value):
+#     print("(2) Widget", instance, "has:", value)
+#     return value
 
 class InputSection(GridLayout):
     # ride_name = StringProperty("")
@@ -29,9 +64,35 @@ class InputSection(GridLayout):
     # intensity_value = StringProperty("")
     # nausea_value = StringProperty("")
     free_entry_value = BooleanProperty(True)
+
+    # widget = textinput, value = text
+    def suggest_ride_names(self, widget, value):
+        # if the textinput is not in focus, do nothing
+        if not widget.focus:
+            return
+        # get suggestions from somewhere
+        suggestions = ["Junior Coaster", "Giga Coaster", "Go Karts", "Observation Tower", "Steel Wild Mouse"]
+        
+        # print(widget, self.ride_name_box)
+        # print([suggestion.text for suggestion in widget.suggestions])
+        # print(widget.dropdown)
+        for i, suggestion in enumerate(suggestions):
+            # btn = Button(text=suggestion, size_hint_y=None, height=dp(30))
+            # btn.bind(on_release=lambda btn: self.ride_name_box.dropdown.select(btn.text))
+            # self.ride_name_box.dropdown.add_widget(btn)
+            # self.suggestions[i].text = suggestion
+            widget.suggestions[i].text = suggestion
+        # self.ride_name_box.add_widget(self.ride_name_box.dropdown)
+        # self.ride_name_box.dropdown.bind(on_select=lambda instance, val: setattr(self.ride_name_box, 'text', val))
+        # only open DropDown if it is not already open and this TextInput is displayed
+        if widget.dropdown.parent is None and widget.get_parent_window() is not None:
+            # print("opening dropdown")
+            self.ride_name_box.dropdown.open(self.ride_name_box)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self.ride_name = "Placeholder"
+        # self.ride_names = read_ride_values().keys()
+        self.ride_name = ""
         # self.excitement_value = ""
         # self.intensity_value = ""
         # self.nausea_value = ""
@@ -39,10 +100,17 @@ class InputSection(GridLayout):
 
         ride_name_label = Label(text="Select the ride type")
         self.add_widget(ride_name_label)
-        self.ride_name_box = TextInput(text="", multiline=False, write_tab=False)
-        # bind seems to not do anything useful for me
-        # self.ride_name_box.bind(text=on_text)
+        self.ride_name_box = RideTextBox(text="", multiline=False, write_tab=False)
+        # try to suggest correct ride names
+        self.ride_name_box.bind(text=self.suggest_ride_names)
         self.add_widget(self.ride_name_box)
+        # self.suggestions = []
+        # # 5 suggestions
+        # for _ in range(5):
+        #     btn = Button(text="", size_hint_y=None, height=dp(30))
+        #     btn.bind(on_release=lambda btn: self.ride_name_box.dropdown.select(btn.text))
+        #     self.ride_name_box.dropdown.add_widget(btn)
+        #     self.suggestions.append(btn)
 
         e_label = Label(text="Excitement Rating")
         self.add_widget(e_label)
@@ -71,25 +139,16 @@ class InputSection(GridLayout):
         self.intensity_value_box.text = ""
         self.nausea_value_box.text = ""
 
-    def get_input_data(self):
-        return (self.ride_name_box.text.lower(), self.excitement_value_box.text)
+    # def get_input_data(self):
+    #     return (self.ride_name_box.text.lower(), self.excitement_value_box.text)
 
-    def change_pay_for_entry(self, widget, state):
-        if widget.state == "normal":
-            widget.text = "No"
-            self.free_entry_value = True
-        else:
-            widget.text = "Yes"
-            self.free_entry_value = False
-        
-        # test
-        # print(self)
-        # print(self.get_input_data())
-        # self.clear_input_boxes()
-        # if self.free_entry_value:
-        #     print("park has free entry")
-        # else:
-        #     print("park is pay-for-entry")
+    # def change_pay_for_entry(self, widget, state):
+    #     if widget.state == "normal":
+    #         widget.text = "No"
+    #         self.free_entry_value = True
+    #     else:
+    #         widget.text = "Yes"
+    #         self.free_entry_value = False
     
     
 
@@ -153,7 +212,6 @@ class PriceTable(GridLayout):
 
 class MainScreen(BoxLayout):
     
-    # pricetable = PriceTable(cols=3, padding=(dp(0), dp(20), dp(0), dp(20)))
 
     def clear_button_pressed(self, widget):
         self.inputsection.clear_input_boxes()
@@ -164,7 +222,16 @@ class MainScreen(BoxLayout):
         self.pricetable.clear_pricetable()
         
     def calculate_price(self, widget, value=None):
-        ride_name = self.inputsection.ride_name_box.text
+        ride_name = self.inputsection.ride_name_box.text.lower()
+        # if ride_name is not good, do nothing
+        if ride_name == "":
+            return
+        if ride_name not in self.ride_values.keys():
+            # should more be done here?
+            # dropdown = DropDown()
+            # self.inputsection.ride_name_box.add_widget(dropdown)
+            # dropdown.add_widget(Label(text="No match found"))
+            return
         try:
             excitement = int(self.inputsection.excitement_value_box.text)
         except ValueError:
@@ -183,18 +250,27 @@ class MainScreen(BoxLayout):
         # for priceline in max_prices:
         #     print(priceline)
 
+    def ride_name_box_focus(self, widget, value):
+        if value:
+            # suggestions, maybe?
+            # print("writing in", widget)
+            pass
+        else:
+            # close the dropdown
+            print(self.inputsection.excitement_value_box.focus)
+            other_input_active = self.inputsection.excitement_value_box.focus or self.inputsection.intensity_value_box.focus or self.inputsection.nausea_value_box.focus
+
+            if self.inputsection.ride_name_box.dropdown.parent is not None and other_input_active:
+                self.inputsection.ride_name_box.dropdown.dismiss()
+            self.calculate_price(widget)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self.inputsection = InputSection()
-        # self.pricetable = PriceTable()
-        # test if it works
-        # print(self.pricetable.labels[0].text)
-        self.ride_name = ""
-        self.excitement = 0
-        self.intensity = 0
-        self.nausea = 0
-        self.free_entry = True
+        # self.ride_name = ""
+        # self.excitement = 0
+        # self.intensity = 0
+        # self.nausea = 0
+        # self.free_entry = True
         self.ride_values = read_ride_values()
         self.age_values = read_age_values()
 
@@ -213,7 +289,7 @@ class MainScreen(BoxLayout):
         self.add_widget(self.pricetable)
 
         # calculating prices automatically
-        # self.inputsection.ride_name_box.bind(text=on_text2)
+        self.inputsection.ride_name_box.bind(focus=self.ride_name_box_focus)
         self.inputsection.excitement_value_box.bind(text=self.calculate_price)
         self.inputsection.intensity_value_box.bind(text=self.calculate_price)
         self.inputsection.nausea_value_box.bind(text=self.calculate_price)
