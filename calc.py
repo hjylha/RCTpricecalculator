@@ -1,18 +1,31 @@
 
 def read_ride_values():
-    ride_values = []
+    ride_values = dict()
     with open("ride_values.csv", "r") as file:
         for line in file:
             dataline0 = line.split(";")[0]
             dataline = dataline0.split(",")
-            ride = dict()
-            ride['rideType'] = dataline[0]
-            ride['excitementValue'] = int(dataline[1])
-            ride['intensityValue'] = int(dataline[2])
-            ride['nauseaValue'] = int(dataline[3])
-            ride['rideBonusValue'] = int(dataline[4])
-            ride_values.append(ride)
+            # name in lowercase just in case
+            name = dataline[0].lower()
+            ride_values[name] = dict()
+            ride_values[name]['excitementValue'] = int(dataline[1])
+            ride_values[name]['intensityValue'] = int(dataline[2])
+            ride_values[name]['nauseaValue'] = int(dataline[3])
+            ride_values[name]['rideBonusValue'] = int(dataline[4])
+            # the old way
+            # ride = dict()
+            # ride['rideType'] = dataline[0]
+            # ride['excitementValue'] = int(dataline[1])
+            # ride['intensityValue'] = int(dataline[2])
+            # ride['nauseaValue'] = int(dataline[3])
+            # ride['rideBonusValue'] = int(dataline[4])
+            # ride_values.append(ride)
     return ride_values
+
+# # this should be unnecessary
+# def get_list_of_ride_types():
+#     ride_values = read_ride_values()
+#     return [ride['rideType'] for ride in ride_values]
 
 # just consider integers
 def read_age_values():
@@ -56,20 +69,29 @@ def rounding(num):
     return int((num // 10) // 10 * 10)
 
 def maximize(num):
-    return 2 * num - 10
+    price = 2 * num - 10
+    if price < 0:
+        return 0
+    return price
 
 # create the calculator
 # EIN as integers (i.e. multiplied by 100)
 def calculate_max_prices(ride_values, age_values, ride_type, excitement, intensity, nausea, free_entry=True):
-    for ride in ride_values:
-        if ride['rideType'].lower() == ride_type.lower():
-            e_multiplier = ride['excitementValue']
-            i_multiplier = ride['intensityValue']
-            n_multiplier = ride['nauseaValue']
-            break
+    # print(ride_values.keys())
+    if ride_type.lower() in ride_values.keys():
+        e_multiplier = ride_values[ride_type]['excitementValue']
+        i_multiplier = ride_values[ride_type]['intensityValue']
+        n_multiplier = ride_values[ride_type]['nauseaValue']
+    # for ride in ride_values:
+    #     if ride['rideType'].lower() == ride_type.lower():
+    #         e_multiplier = ride['excitementValue']
+    #         i_multiplier = ride['intensityValue']
+    #         n_multiplier = ride['nauseaValue']
+    #         break
     else:
-        print("Cannot find ride of type", ride_type)
-        return
+        # print("Cannot find ride of type", ride_type)
+        # should a new exception class be defined for this?
+        raise Exception("Given ride type not found: " + ride_type)
     ride_value = (excitement * e_multiplier) // 1024 + (intensity * i_multiplier) // 1024 + (nausea * n_multiplier) // 1024
     max_prices = []
     for age in age_values:
