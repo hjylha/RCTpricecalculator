@@ -11,21 +11,41 @@ from kivy.uix.dropdown import DropDown
 from kivy.properties import BooleanProperty, StringProperty
 
 from calc import read_ride_values, read_age_values, calculate_max_prices, add_empty_space_at_the_end
+from calc import get_suggestions_for_ride_name
 
 
 class DescriptionText(BoxLayout):
     pass
 
 class RideTextBox(TextInput):
+    def suggest_ride_names(self, widget, text):
+        # if the textinput is not in focus, do nothing
+        if not self.focus:
+            return
+        
+        # clear dropdown just in case
+        self.dropdown.clear_widgets()
+        new_sugg = get_suggestions_for_ride_name(text, self.ride_names, self.num_of_suggestions)
+        for i in range(len(new_sugg)):
+            self.suggestions[i].text = new_sugg[i]
+            self.dropdown.add_widget(self.suggestions[i])
+        
+
+        # only open DropDown if it is not already open and this TextInput is displayed
+        if self.dropdown.parent is None and self.get_parent_window() is not None:
+            # print("opening dropdown")
+            self.dropdown.open(self)
+
     def select_suggestion(self, widget, value):
         # print("suggestion")
         # print(widget, "has value", value)
-        if value:
+        if value and not(widget.text == "No match found"):
             self.dropdown.select(widget.text)
-            self.dropdown.dismiss()
-        else:
-            # is this correct?
-            self.dropdown.select(widget.text)
+            # probably not necessary
+            # self.dropdown.dismiss()
+        # else:
+        #     # is this correct?
+        #     self.dropdown.select(widget.text)
 
     def make_selection(self, widget, value):
         # print("selected")
@@ -37,6 +57,7 @@ class RideTextBox(TextInput):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.ride_names = read_ride_values().keys()
         self.dropdown = DropDown()
         # 5 suggestions
         self.num_of_suggestions = 5
@@ -48,6 +69,7 @@ class RideTextBox(TextInput):
             
         # self.dropdown.bind(on_select=lambda widget, value: setattr(self, 'text', value))
         self.dropdown.bind(on_select=self.make_selection)
+        self.bind(text=self.suggest_ride_names)
 
 
 # def on_text(instance, value):
@@ -71,23 +93,22 @@ class InputSection(GridLayout):
         if not widget.focus:
             return
         # get suggestions from somewhere
-        suggestions = ["Junior Coaster", "Giga Coaster", "Go Karts", "Observation Tower", "Steel Wild Mouse"]
+        # suggestions = ["Junior Coaster", "Giga Coaster", "Go Karts", "Observation Tower", "Steel Wild Mouse"]
+        suggestions = ["No match found"]
         
-        # print(widget, self.ride_name_box)
-        # print([suggestion.text for suggestion in widget.suggestions])
-        # print(widget.dropdown)
         for i, suggestion in enumerate(suggestions):
             # btn = Button(text=suggestion, size_hint_y=None, height=dp(30))
             # btn.bind(on_release=lambda btn: self.ride_name_box.dropdown.select(btn.text))
             # self.ride_name_box.dropdown.add_widget(btn)
-            # self.suggestions[i].text = suggestion
             widget.suggestions[i].text = suggestion
-        # self.ride_name_box.add_widget(self.ride_name_box.dropdown)
-        # self.ride_name_box.dropdown.bind(on_select=lambda instance, val: setattr(self.ride_name_box, 'text', val))
         # only open DropDown if it is not already open and this TextInput is displayed
         if widget.dropdown.parent is None and widget.get_parent_window() is not None:
             # print("opening dropdown")
             self.ride_name_box.dropdown.open(self.ride_name_box)
+        
+    def close_ride_name_dropdown(self, widget, value):
+        if self.ride_name_box.dropdown.parent is not None and value:
+            self.ride_name_box.dropdown.dismiss()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -102,7 +123,7 @@ class InputSection(GridLayout):
         self.add_widget(ride_name_label)
         self.ride_name_box = RideTextBox(text="", multiline=False, write_tab=False)
         # try to suggest correct ride names
-        self.ride_name_box.bind(text=self.suggest_ride_names)
+        # self.ride_name_box.bind(text=self.suggest_ride_names)
         self.add_widget(self.ride_name_box)
         # self.suggestions = []
         # # 5 suggestions
@@ -116,16 +137,19 @@ class InputSection(GridLayout):
         self.add_widget(e_label)
         self.excitement_value_box = TextInput(text="", multiline=False, write_tab=False)
         self.add_widget(self.excitement_value_box)
+        self.excitement_value_box.bind(focus=self.close_ride_name_dropdown)
         
         i_label = Label(text="Intensity Rating")
         self.add_widget(i_label)
         self.intensity_value_box = TextInput(text="", multiline=False, write_tab=False)
         self.add_widget(self.intensity_value_box)
+        # self.intensity_value_box.bind(focus=self.close_ride_name_dropdown)
 
         n_label = Label(text="Nausea Rating")
         self.add_widget(n_label)
         self.nausea_value_box = TextInput(text="", multiline=False, write_tab=False)
         self.add_widget(self.nausea_value_box)
+        # self.nausea_value_box.bind(focus=self.close_ride_name_dropdown)
 
         self.add_widget(Label(text="Do you charge for park entry?"))
         self.pay_for_entry_btn = ToggleButton(text="No")
@@ -251,18 +275,20 @@ class MainScreen(BoxLayout):
         #     print(priceline)
 
     def ride_name_box_focus(self, widget, value):
-        if value:
-            # suggestions, maybe?
-            # print("writing in", widget)
-            pass
-        else:
-            # close the dropdown
-            print(self.inputsection.excitement_value_box.focus)
-            other_input_active = self.inputsection.excitement_value_box.focus or self.inputsection.intensity_value_box.focus or self.inputsection.nausea_value_box.focus
-
-            if self.inputsection.ride_name_box.dropdown.parent is not None and other_input_active:
-                self.inputsection.ride_name_box.dropdown.dismiss()
+        if not value:
             self.calculate_price(widget)
+        # if value:
+        #     # suggestions, maybe?
+        #     # print("writing in", widget)
+        #     pass
+        # else:
+        #     # close the dropdown
+        #     print(self.inputsection.excitement_value_box.focus)
+        #     other_input_active = self.inputsection.excitement_value_box.focus or self.inputsection.intensity_value_box.focus or self.inputsection.nausea_value_box.focus
+
+        #     if self.inputsection.ride_name_box.dropdown.parent is not None and other_input_active:
+        #         self.inputsection.ride_name_box.dropdown.dismiss()
+        #     self.calculate_price(widget)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

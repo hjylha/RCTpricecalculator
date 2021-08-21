@@ -22,11 +22,6 @@ def read_ride_values():
             # ride_values.append(ride)
     return ride_values
 
-# # this should be unnecessary
-# def get_list_of_ride_types():
-#     ride_values = read_ride_values()
-#     return [ride['rideType'] for ride in ride_values]
-
 # just consider integers
 def read_age_values():
     age_values = []
@@ -57,6 +52,17 @@ def read_age_values():
                 age_values[i]['modifier_classic'] = int(dataline[2])
     return age_values
 
+def get_suggestions_for_ride_name(text_input, ride_names, num_of_suggestions):
+    suggestions = []
+    num = len(text_input)
+    for name in ride_names:
+        if text_input == name[:num] and len(suggestions) < num_of_suggestions:
+            suggestions.append(name)
+
+    if suggestions == []:
+        suggestions.append("No match found")
+    return suggestions
+
 def add_empty_space_at_the_end(word, length):
     if len(word) < length:
         new_word = word
@@ -72,6 +78,8 @@ def maximize(num):
     price = 2 * num - 10
     if price < 0:
         return 0
+    if price > 2000:
+        return 2000
     return price
 
 # create the calculator
