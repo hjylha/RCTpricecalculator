@@ -37,6 +37,11 @@ class RideTextBox(TextInput):
                     if self.active_suggestion > -1:
                         self.suggestions[self.active_suggestion].select_all()
                 return True
+            elif keycode[1] == 'right':
+                if self.active_suggestion > -1:
+                    self.suggestions[self.active_suggestion].cancel_selection()
+                    self.text = self.suggestions[self.active_suggestion].text
+                    self.active_suggestion = -1
             
         return super().keyboard_on_key_down(window, keycode, text, modifiers)
     
