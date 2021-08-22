@@ -18,6 +18,28 @@ class DescriptionText(BoxLayout):
     pass
 
 class RideTextBox(TextInput):
+    def keyboard_on_key_down(self, window, keycode, text, modifiers):
+        # print(self.dropdown.parent, self)
+        if self.dropdown.parent is not None and self.suggestions[0].text != "No match found":
+            if keycode[1] == 'down':
+                if self.active_suggestion > -1:
+                    self.suggestions[self.active_suggestion].cancel_selection()
+                self.active_suggestion += 1
+                if self.active_suggestion == len(self.suggestions):
+                    self.active_suggestion = -1
+                elif self.active_suggestion > -1:
+                    self.suggestions[self.active_suggestion].select_all()
+                return True
+            elif keycode[1] == 'up':
+                if self.active_suggestion > -1:
+                    self.suggestions[self.active_suggestion].cancel_selection()
+                    self.active_suggestion -= 1
+                    if self.active_suggestion > -1:
+                        self.suggestions[self.active_suggestion].select_all()
+                return True
+            
+        return super().keyboard_on_key_down(window, keycode, text, modifiers)
+    
     def suggest_ride_names(self, widget, text):
         # if the textinput is not in focus, do nothing
         if not self.focus:
@@ -61,6 +83,8 @@ class RideTextBox(TextInput):
         self.dropdown = DropDown()
         # 5 suggestions
         self.num_of_suggestions = 5
+        # at first no suggestion active
+        self.active_suggestion = -1
         # readonly = True ??
         self.suggestions = [TextInput(text="", readonly=True, multiline=False, write_tab=False, size_hint_y=None, height=dp(30)) for _ in range(self.num_of_suggestions)]
         for suggestion in self.suggestions:
@@ -108,6 +132,13 @@ class InputSection(GridLayout):
         
     def close_ride_name_dropdown(self, widget, value):
         if self.ride_name_box.dropdown.parent is not None and value:
+            # if name is highlighted in dropdown, choose it as ride_name
+            if self.ride_name_box.active_suggestion > -1:
+                name = self.ride_name_box.suggestions[self.ride_name_box.active_suggestion].text
+                self.ride_name_box.text = name
+                # remove highlighting
+                self.ride_name_box.suggestions[self.ride_name_box.active_suggestion].cancel_selection()
+                self.ride_name_box.active_suggestion = -1
             self.ride_name_box.dropdown.dismiss()
 
     def __init__(self, **kwargs):
