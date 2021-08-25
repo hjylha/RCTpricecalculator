@@ -59,7 +59,7 @@ def get_suggestions_for_ride_name(text_input, ride_names, num_of_suggestions):
     for name in ride_names:
         if len(suggestions) >= num_of_suggestions:
             return suggestions
-        if text_input == name[:num]:
+        if name.startswith(text_input):
             suggestions.append(name)
     
     # match with any part of ride name
@@ -68,7 +68,7 @@ def get_suggestions_for_ride_name(text_input, ride_names, num_of_suggestions):
             return suggestions
         if len(name) > num:
             for i in range(1, len(name)- num + 1):
-                if text_input == name[i:i+num]:
+                if name[i:].startswith(text_input):
                     if name not in suggestions:
                         suggestions.append(name)
 
