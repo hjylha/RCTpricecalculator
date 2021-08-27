@@ -208,7 +208,7 @@ class PriceTable(GridLayout):
         super().__init__(**kwargs)
         self.age_values = read_age_values()
         # 12 rows, 3 columns
-        cell1 = Label(text='Age')
+        cell1 = Label(text='Age (in months)')
         self.add_widget(cell1)
         cell2 = Label(text='Max Price (openRCT2)')
         self.add_widget(cell2)
