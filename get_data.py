@@ -1,3 +1,4 @@
+"""script to read ride values and age modifiers from downloaded file"""
 
 # source = "C:\Pelit\Useful ride info RCT2.csv"
 def read_ride_values(filepath="C:\\Pelit\\Useful ride info RCT2.csv"):
