@@ -74,13 +74,6 @@ class RideTextBox(TextInput):
         self.text = value
         self.focus = True
 
-    # def focus_fcn(self, widget, value):
-    #     if value:
-    #         # if ride name textbox was not in focus, select all the text in it
-    #         if not self.real_focus:
-    #             self.select_all()
-    #         self.real_focus = True
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -220,10 +213,10 @@ def price_as_string(price):
     return price_s[:2] + '.' + price_s[2:]
 
 # something like price1 | price2 ?? since these are not really related
-def format_prices(price1, price2):
-    text1 = price_as_string(price1)
-    text2 = price_as_string(price2)
-    return text1 + '      |      ' + text2
+# def format_prices(price1, price2):
+#     text1 = price_as_string(price1)
+#     text2 = price_as_string(price2)
+#     return text1 + '      |      ' + text2
 
 class PriceTable(GridLayout):
     def __init__(self, **kwargs):
@@ -256,24 +249,17 @@ class PriceTable(GridLayout):
         # place age ranges in the pricetable
         age_values = read_age_values()
         for i, line in enumerate(age_values):
-            # start_age = add_empty_space_at_the_end(str(line['from']), 3)
-            # end_age = add_empty_space_at_the_end(str(line['to']), 3)
-            # text_to_cell = start_age + ' ... ' + end_age
             self.labels[8 + 5*i].text = format_age_ranges(line['from'], line['to'])
 
     def clear_pricetable(self):
         for i in range(len(self.age_values)):
             for j in range(1, 5):
                 self.labels[8 + 5*i + j].text = ''
-            # self.labels[3 * (i+2) + 1].text = ''
-            # self.labels[3 * (i+2) + 2].text = ''
 
     def write_pricetable(self, max_prices):
         for i, priceline in enumerate(max_prices):
             for j in range(4):
                 self.labels[9 + 5*i + j].text = price_as_string(priceline[j])
-            # self.labels[3 * (i+2) + 1].text = format_prices(priceline[0], priceline[1])
-            # self.labels[3 * (i+2) + 2].text = format_prices(priceline[2], priceline[3])
 
 
 class MainScreen(BoxLayout):
