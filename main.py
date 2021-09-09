@@ -74,12 +74,20 @@ class RideTextBox(TextInput):
         self.text = value
         self.focus = True
 
+    # def focus_fcn(self, widget, value):
+    #     if value:
+    #         # if ride name textbox was not in focus, select all the text in it
+    #         if not self.real_focus:
+    #             self.select_all()
+    #         self.real_focus = True
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         self.ride_names = read_ride_values().keys()
         self.dropdown = DropDown()
         self.no_match_text = 'No match found'
+        self.real_focus = False
         # max 5 suggestions
         self.max_num_of_suggestions = 5
         # at first no suggestion active
@@ -94,10 +102,20 @@ class RideTextBox(TextInput):
         # self.dropdown.bind(on_select=lambda widget, value: setattr(self, 'text', value))
         self.dropdown.bind(on_select=self.make_selection)
         self.bind(text=self.suggest_ride_names)
+        # self.bind(focus=self.focus_fcn)
 
 
 class InputSection(GridLayout):
     free_entry_value = BooleanProperty(True)
+
+    def when_textinput_in_focus(self, widget, value):
+        # close ride name dropdown if applicable
+        # if widget != self.ride_name_box:
+        self.close_ride_name_dropdown(widget, value)
+        # highlight previous text (if any)
+        if value:
+            self.ride_name_box.real_focus = False
+            widget.select_all()
         
     def close_ride_name_dropdown(self, widget, value):
         if self.ride_name_box.dropdown.parent is not None and value:
@@ -118,8 +136,8 @@ class InputSection(GridLayout):
         ride_name_label = Label(text='Select the ride type')
         self.add_widget(ride_name_label)
         self.ride_name_box = RideTextBox(text='', multiline=False, write_tab=False)
-        # try to suggest correct ride names (make a custom textinput instead)
-        # self.ride_name_box.bind(text=self.suggest_ride_names)
+        # this does not work
+        # self.ride_name_box.bind(text=self.when_textinput_in_focus)
         self.add_widget(self.ride_name_box)
 
         e_label = Label(text='Excitement Rating')
@@ -127,19 +145,19 @@ class InputSection(GridLayout):
         self.excitement_value_box = TextInput(text='', multiline=False, write_tab=False)
         self.add_widget(self.excitement_value_box)
         # if, ER textinput is active, close ride name suggestion dropdown
-        self.excitement_value_box.bind(focus=self.close_ride_name_dropdown)
+        self.excitement_value_box.bind(focus=self.when_textinput_in_focus)
         
         i_label = Label(text='Intensity Rating')
         self.add_widget(i_label)
         self.intensity_value_box = TextInput(text='', multiline=False, write_tab=False)
         self.add_widget(self.intensity_value_box)
-        # self.intensity_value_box.bind(focus=self.close_ride_name_dropdown)
+        self.intensity_value_box.bind(focus=self.when_textinput_in_focus)
 
         n_label = Label(text='Nausea Rating')
         self.add_widget(n_label)
         self.nausea_value_box = TextInput(text='', multiline=False, write_tab=False)
         self.add_widget(self.nausea_value_box)
-        # self.nausea_value_box.bind(focus=self.close_ride_name_dropdown)
+        self.nausea_value_box.bind(focus=self.when_textinput_in_focus)
 
         self.add_widget(Label(text='Do you charge for park entry?'))
         self.pay_for_entry_btn = ToggleButton(text='No')
@@ -275,6 +293,10 @@ class MainScreen(BoxLayout):
         self.pricetable.write_pricetable(max_prices)
 
     def ride_name_box_focus(self, widget, value):
+        if value:
+            if not widget.real_focus:
+                widget.select_all()
+            widget.real_focus = True
         if not value:
             self.calculate_price(widget)
     
@@ -306,6 +328,9 @@ class MainScreen(BoxLayout):
         self.inputsection.intensity_value_box.bind(text=self.calculate_price)
         self.inputsection.nausea_value_box.bind(text=self.calculate_price)
         self.inputsection.pay_for_entry_btn.bind(state=self.change_pay_for_entry)
+
+        # set focus to ride name box
+        self.inputsection.ride_name_box.focus = True
 
     def change_pay_for_entry(self, widget, state):
         if widget.state == 'normal':
