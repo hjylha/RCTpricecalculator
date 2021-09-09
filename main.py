@@ -229,37 +229,51 @@ class PriceTable(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.age_values = read_age_values()
-        # 12 rows, 3 columns
+        # 12 rows, 1? + 2 + 2 columns of boxlayouts
+        self.table = [BoxLayout() for _ in range(36)]
+        for layout in self.table:
+            self.add_widget(layout)
+        # 3 labels in the first row
         cell1 = Label(text='Age (in months)')
-        self.add_widget(cell1)
+        self.table[0].add_widget(cell1)
         cell2 = Label(text='Max Price (openRCT2)')
-        self.add_widget(cell2)
+        self.table[1].add_widget(cell2)
         cell3 = Label(text='Max Price (classic)')
-        self.add_widget(cell3)
+        self.table[2].add_widget(cell3)
         self.labels = [cell1, cell2, cell3]
-        for _ in range(33):
-            cell = Label(text='')
-            self.labels.append(cell)
-            self.add_widget(cell)
-        self.labels[4].text = 'unique      |     non-unique'
-        self.labels[5].text = 'unique - - - non-unique'
+        # 11 rows with 5 labels
+        for i, layout in enumerate(self.table):
+            if i > 2:
+                cell = Label(text='')
+                self.labels.append(cell)
+                layout.add_widget(cell)
+                if i % 3 != 0:
+                    cell = Label(text='')
+                    self.labels.append(cell)
+                    layout.add_widget(cell)
+        self.labels[4].text = self.labels[6].text = 'unique'
+        self.labels[5].text = self.labels[7].text = 'non-unique'
         # place age ranges in the pricetable
         age_values = read_age_values()
         for i, line in enumerate(age_values):
             # start_age = add_empty_space_at_the_end(str(line['from']), 3)
             # end_age = add_empty_space_at_the_end(str(line['to']), 3)
             # text_to_cell = start_age + ' ... ' + end_age
-            self.labels[3 * (i+2)].text = format_age_ranges(line['from'], line['to'])
+            self.labels[8 + 5*i].text = format_age_ranges(line['from'], line['to'])
 
     def clear_pricetable(self):
         for i in range(len(self.age_values)):
-            self.labels[3 * (i+2) + 1].text = ''
-            self.labels[3 * (i+2) + 2].text = ''
+            for j in range(1, 5):
+                self.labels[8 + 5*i + j].text = ''
+            # self.labels[3 * (i+2) + 1].text = ''
+            # self.labels[3 * (i+2) + 2].text = ''
 
     def write_pricetable(self, max_prices):
         for i, priceline in enumerate(max_prices):
-            self.labels[3 * (i+2) + 1].text = format_prices(priceline[0], priceline[1])
-            self.labels[3 * (i+2) + 2].text = format_prices(priceline[2], priceline[3])
+            for j in range(4):
+                self.labels[9 + 5*i + j].text = price_as_string(priceline[j])
+            # self.labels[3 * (i+2) + 1].text = format_prices(priceline[0], priceline[1])
+            # self.labels[3 * (i+2) + 2].text = format_prices(priceline[2], priceline[3])
 
 
 class MainScreen(BoxLayout):
