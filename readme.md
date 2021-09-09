@@ -5,7 +5,7 @@ Yes, this already exists at <https://rct2calc.shottysteve.com/> and probably oth
 
 ![Price Calculator window](pricecalculator.png)
 
-The calculator uses kivy for its GUI. Other extra packages are not used.
+The calculator uses kivy for its GUI. More detailed list of dependencies can be found in *requirements.txt*.
 
 To launch the calculator, type
 
