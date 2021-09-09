@@ -20,12 +20,12 @@ class DescriptionText(BoxLayout):
 class RideTextBox(TextInput):
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
         # highlight suggestions with up and down, select one with right
-        if self.dropdown.parent is not None and self.suggestions[0].text != 'No match found':
+        if self.dropdown.parent is not None and self.suggestions[0].text != self.no_match_text:
             if keycode[1] == 'down':
                 if self.active_suggestion > -1:
                     self.suggestions[self.active_suggestion].cancel_selection()
                 self.active_suggestion += 1
-                if self.active_suggestion == len(self.suggestions):
+                if self.active_suggestion == self.num_of_suggestions:
                     self.active_suggestion = -1
                 elif self.active_suggestion > -1:
                     self.suggestions[self.active_suggestion].select_all()
@@ -52,8 +52,9 @@ class RideTextBox(TextInput):
         # clear dropdown just in case
         self.dropdown.clear_widgets()
         # get suggestions and place them in the dropdown
-        new_sugg = get_suggestions_for_ride_name(text, self.ride_names, self.num_of_suggestions)
-        for i in range(len(new_sugg)):
+        new_sugg = get_suggestions_for_ride_name(text, self.ride_names, self.max_num_of_suggestions)
+        self.num_of_suggestions = len(new_sugg)
+        for i in range(self.num_of_suggestions):
             self.suggestions[i].text = new_sugg[i]
             self.dropdown.add_widget(self.suggestions[i])
         # only open dropdow if it is not already open and this TextInput is displayed
@@ -61,7 +62,7 @@ class RideTextBox(TextInput):
             self.dropdown.open(self)
 
     def select_suggestion(self, widget, value):
-        if value and not(widget.text == 'No match found'):
+        if value and not(widget.text == self.no_match_text):
             self.dropdown.select(widget.text)
             # probably not necessary
             # self.dropdown.dismiss()
@@ -78,12 +79,14 @@ class RideTextBox(TextInput):
 
         self.ride_names = read_ride_values().keys()
         self.dropdown = DropDown()
-        # 5 suggestions
-        self.num_of_suggestions = 5
+        self.no_match_text = 'No match found'
+        # max 5 suggestions
+        self.max_num_of_suggestions = 5
         # at first no suggestion active
         self.active_suggestion = -1
         # readonly = True ??
-        self.suggestions = [TextInput(text='', readonly=True, multiline=False, write_tab=False, size_hint_y=None, height=dp(30)) for _ in range(self.num_of_suggestions)]
+        self.suggestions = [TextInput(text='', readonly=True, multiline=False, write_tab=False, size_hint_y=None, height=dp(30)) for _ in range(self.max_num_of_suggestions)]
+        self.num_of_suggestions = len(self.suggestions)
         for suggestion in self.suggestions:
             suggestion.bind(focus=self.select_suggestion)
             self.dropdown.add_widget(suggestion)
@@ -101,7 +104,8 @@ class InputSection(GridLayout):
             # if name is highlighted in dropdown, choose it as ride_name
             if self.ride_name_box.active_suggestion > -1:
                 name = self.ride_name_box.suggestions[self.ride_name_box.active_suggestion].text
-                self.ride_name_box.text = name
+                if name != self.ride_name_box.no_match_text:
+                    self.ride_name_box.text = name
                 # remove highlighting
                 self.ride_name_box.suggestions[self.ride_name_box.active_suggestion].cancel_selection()
                 self.ride_name_box.active_suggestion = -1
@@ -219,7 +223,7 @@ class PriceTable(GridLayout):
             cell = Label(text='')
             self.labels.append(cell)
             self.add_widget(cell)
-        self.labels[4].text = 'unique - - - non-unique'
+        self.labels[4].text = 'unique      |     non-unique'
         self.labels[5].text = 'unique - - - non-unique'
         # place age ranges in the pricetable
         age_values = read_age_values()
