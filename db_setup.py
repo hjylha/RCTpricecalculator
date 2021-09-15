@@ -24,3 +24,8 @@ def create_age_columns():
         'modifier': ('INTEGER', 'NOT NULL'),
         'modifier_type_classic': ('TEXT', 'NOT NULL'),
         'modifier_classic': ('INTEGER', 'NOT NULL')}
+
+def create_EIN_columns():
+    return {'excitement': ('INTEGER', 'NOT NULL'),
+            'intensity': ('INTEGER', 'NOT NULL'),
+            'nausea': ('INTEGER', 'NOT NULL')}
