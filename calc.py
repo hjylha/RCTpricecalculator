@@ -92,19 +92,15 @@ def maximize(num):
         return 2000
     return price
 
+# EIN multipliers as 3-tuple, EIN as 3-tuple (of integers)
+def calculate_ride_value(EIN_multipliers, EIN):
+    ride_value = 0
+    for i in range(len(EIN)):
+        ride_value += (EIN[i] * EIN_multipliers[i]) // 1024
+    return ride_value
 
-# create the calculator
-# EIN as integers (i.e. multiplied by 100)
-def calculate_max_prices(ride_values, age_values, ride_type, excitement, intensity, nausea, free_entry=True):
-    if ride_type.lower() in ride_values.keys():
-        e_multiplier = ride_values[ride_type]['excitementValue']
-        i_multiplier = ride_values[ride_type]['intensityValue']
-        n_multiplier = ride_values[ride_type]['nauseaValue']
-    else:
-        # print('Cannot find ride of type', ride_type)
-        # should a new exception class be defined for this?
-        raise Exception('Given ride type not found: ' + ride_type)
-    ride_value = (excitement * e_multiplier) // 1024 + (intensity * i_multiplier) // 1024 + (nausea * n_multiplier) // 1024
+# calculate_prices based on ride value and age values
+def calculate_prices(ride_value, age_values, free_entry=True):
     max_prices = []
     for age in age_values:
         price_unique = maximize(rounding(ride_value * age['modifier']))
@@ -129,6 +125,25 @@ def calculate_max_prices(ride_values, age_values, ride_type, excitement, intensi
             new_max_prices.append(tuple(new_price_line))
         max_prices = new_max_prices
     return max_prices
+
+# create the calculator
+# EIN as integers (i.e. multiplied by 100)
+def calculate_price_table(EIN_multipliers, EIN, age_values, free_entry=True):
+    ride_value = calculate_ride_value(EIN_multipliers, EIN)
+    return calculate_prices(ride_value, age_values, free_entry)
+
+def calculate_max_prices(ride_values, age_values, ride_type, excitement, intensity, nausea, free_entry=True):
+    if ride_type.lower() in ride_values.keys():
+        e_multiplier = ride_values[ride_type]['excitementValue']
+        i_multiplier = ride_values[ride_type]['intensityValue']
+        n_multiplier = ride_values[ride_type]['nauseaValue']
+    else:
+        # print('Cannot find ride of type', ride_type)
+        # should a new exception class be defined for this?
+        raise Exception('Given ride type not found: ' + ride_type)
+    # ride_value = (excitement * e_multiplier) // 1024 + (intensity * i_multiplier) // 1024 + (nausea * n_multiplier) // 1024
+    ride_value = calculate_ride_value((e_multiplier, i_multiplier, n_multiplier), (excitement, intensity, nausea))
+    return calculate_prices(ride_value, age_values, free_entry)
 
 # read data from files and calculate
 def calculate_max_price(ride_type, excitement, intensity, nausea, free_entry=True):
