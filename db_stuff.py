@@ -1,8 +1,9 @@
 import sqlite3
+from db_setup import db_filename
 
 # connect to the database
 def make_connection():
-    conn = sqlite3.connect('rct_data.db')
+    conn = sqlite3.connect(db_filename)
     cur = conn.cursor()
     return (conn, cur)
 
@@ -50,6 +51,20 @@ def insert_into_command(table_name, columns, data):
     command += ');'
     return command
 
+# SELECT columns[0], columns[1], ... FROM table_name;
+def select_column_command(table_name, columns):
+    # command = 'SELECT ' + column_name + ' FROM ' + table_name + ';'
+    command = 'SELECT '
+    first = True
+    for column in columns:
+        if not first:
+            command += ', '
+        command += column
+        if first:
+            first = False
+    command += ' FROM ' + table_name + ';'
+    return command
+
 
 # column_data as a dict with column name as key, type etc as value (tuple/list)
 def create_table(table_name, column_data):
@@ -63,6 +78,7 @@ def create_table(table_name, column_data):
     # conn.commit()
     conn.close()
 
+# insert data to specific columns
 def insert_data(table_name, columns, data):
     conn = make_connection()[0]
     with conn:
@@ -71,11 +87,20 @@ def insert_data(table_name, columns, data):
         conn.execute(command, data)
     conn.close()
 
+# get everything in specific columns
+def select_columns(table_name, columns):
+    conn, cur = make_connection()
+    with conn:
+        command = select_column_command(table_name, columns)
+        cur.execute(command)
+        data = cur.fetchall()
+    return data
+
 # get everything from table_name
 def select_all(table_name):
     conn, cur = make_connection()
     with conn:
-        cur.execute('SELECT * FROM ' + table_name)
+        cur.execute('SELECT rowid, * FROM ' + table_name)
         all_things = cur.fetchall()
     return all_things
 
