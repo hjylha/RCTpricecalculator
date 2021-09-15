@@ -12,7 +12,7 @@ from kivy.uix.dropdown import DropDown
 from kivy.properties import BooleanProperty
 # handling the RCT data and calculations
 # from calc import read_ride_values, read_age_values, calculate_max_prices
-from calc import get_suggestions_for_ride_name, calculate_price_table
+from calc import get_suggestions_for_ride_name, get_EIN_value, calculate_price_table
 from db_fcns import get_age_modifiers, get_ride_names, get_EIN_values_for_ride
 
 
@@ -268,9 +268,26 @@ class PriceTable(GridLayout):
 
 class MainScreen(BoxLayout):
     
+    # if clear button is pressed, clear everything
     def clear_button_pressed(self, widget):
         self.inputsection.clear_input_boxes()
         self.pricetable.clear_pricetable()
+
+    # get excitement, intensity and nausea values from textinputs
+    def get_EIN_values(self):
+        excitement_str = self.inputsection.excitement_value_box.text
+        intensity_str = self.inputsection.intensity_value_box.text
+        nausea_str = self.inputsection.nausea_value_box.text
+        # if user uses actual values
+        if ('.' in excitement_str) or ('.' in intensity_str) or ('.' in nausea_str):
+            excitement = get_EIN_value(excitement_str, True)
+            intensity = get_EIN_value(intensity_str, True)
+            nausea = get_EIN_value(nausea_str, True)
+            return (excitement, intensity, nausea)
+        excitement = get_EIN_value(excitement_str)
+        intensity = get_EIN_value(intensity_str)
+        nausea = get_EIN_value(nausea_str)
+        return (excitement, intensity, nausea)
         
     def calculate_price(self, widget, value=None):
         ride_name = self.inputsection.ride_name_box.text.lower()
@@ -280,20 +297,8 @@ class MainScreen(BoxLayout):
         if ride_name not in self.inputsection.ride_name_box.ride_names:
             # should more be done here?
             return
-        try:
-            excitement = int(self.inputsection.excitement_value_box.text)
-        except ValueError:
-            excitement = 0
-        try:
-            intensity = int(self.inputsection.intensity_value_box.text)
-        except ValueError:
-            intensity = 0
-        try:
-            nausea = int(self.inputsection.nausea_value_box.text)
-        except ValueError:
-            nausea = 0
+        EIN = self.get_EIN_values()
         EIN_multipliers = get_EIN_values_for_ride(ride_name)
-        EIN = (excitement, intensity, nausea)
         max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
         # max_prices = calculate_max_prices(self.ride_values, self.age_values, ride_name, excitement, intensity, nausea, self.inputsection.free_entry_value)
         # show the prices in the pricetable
@@ -301,7 +306,8 @@ class MainScreen(BoxLayout):
     
     # save EIN to the database
     def calculate_and_save(self, widget, value=None):
-        pass
+        self.calculate_price(widget)
+        # TODO
 
     def ride_name_box_focus(self, widget, value):
         if value:
@@ -327,7 +333,7 @@ class MainScreen(BoxLayout):
         # self.clear_button = Button(text='Clear', on_press=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         buttons.add_widget(Button(text='Clear', on_press=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         # self.calculate_button = Button(text='Calculate', on_press=self.calculate_price, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        buttons.add_widget(Button(text='Calculate', on_press=self.calculate_price, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
+        buttons.add_widget(Button(text='Calculate and Save', on_press=self.calculate_and_save, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         self.add_widget(buttons)
 
         # table to show the prices

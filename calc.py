@@ -79,6 +79,17 @@ def add_empty_space_at_the_end(word, length):
         return new_word
     return word
 
+# turn inputted EIN value into correct form
+def get_EIN_value(input_value, is_float=False):
+    if is_float:
+        try:
+            return int(float(input_value) * 100)
+        except ValueError:
+            return 0
+    try:
+        return int(input_value)
+    except ValueError:
+        return 0
 
 # little functions for the calculator
 def rounding(num):
