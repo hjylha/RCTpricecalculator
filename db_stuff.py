@@ -104,5 +104,23 @@ def select_all(table_name):
         all_things = cur.fetchall()
     return all_things
 
+# get info on row with specific rowid
+def select_row_by_rowid(table_name, rowid):
+    conn, cur = make_connection()
+    with conn:
+        command = 'SELECT rowid, * FROM ' + table_name + ' WHERE rowid = ?;'
+        cur.execute(command, (rowid,))
+        row = cur.fetchone()
+    return row
+
+# get info on rows with column = value
+def select_rows_by_column_value(table_name, column, value):
+    conn, cur = make_connection()
+    with conn:
+        command = 'SELECT rowid, * FROM ' + table_name + ' WHERE ' + column + ' = ?;'
+        cur.execute(command, (value,))
+        rows = cur.fetchall()
+    return rows
+
 
 
