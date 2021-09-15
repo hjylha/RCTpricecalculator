@@ -1,3 +1,4 @@
+
 from kivy.app import App
 from kivy.metrics import dp
 from kivy.uix.widget import Widget
@@ -10,7 +11,9 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.dropdown import DropDown
 from kivy.properties import BooleanProperty
 # handling the RCT data and calculations
-from calc import read_ride_values, read_age_values, get_suggestions_for_ride_name, calculate_max_prices
+# from calc import read_ride_values, read_age_values, calculate_max_prices
+from calc import get_suggestions_for_ride_name, calculate_price_table
+from db_fcns import get_age_modifiers, get_ride_names, get_EIN_values_for_ride
 
 
 class DescriptionText(BoxLayout):
@@ -77,7 +80,8 @@ class RideTextBox(TextInput):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.ride_names = read_ride_values().keys()
+        # self.ride_names = read_ride_values().keys()
+        self.ride_names = get_ride_names()
         self.dropdown = DropDown()
         self.no_match_text = 'No match found'
         self.real_focus = False
@@ -221,7 +225,8 @@ def price_as_string(price):
 class PriceTable(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.age_values = read_age_values()
+        # self.age_values = read_age_values()
+        self.age_values = get_age_modifiers()
         # 12 rows, 1? + 2 + 2 columns of boxlayouts
         self.table = [BoxLayout() for _ in range(36)]
         for layout in self.table:
@@ -247,8 +252,7 @@ class PriceTable(GridLayout):
         self.labels[4].text = self.labels[6].text = 'unique'
         self.labels[5].text = self.labels[7].text = 'non-unique'
         # place age ranges in the pricetable
-        age_values = read_age_values()
-        for i, line in enumerate(age_values):
+        for i, line in enumerate(self.age_values):
             self.labels[8 + 5*i].text = format_age_ranges(line['from'], line['to'])
 
     def clear_pricetable(self):
@@ -273,7 +277,7 @@ class MainScreen(BoxLayout):
         # if ride_name is not good, do nothing
         if ride_name == '':
             return
-        if ride_name not in self.ride_values.keys():
+        if ride_name not in self.inputsection.ride_name_box.ride_names:
             # should more be done here?
             return
         try:
@@ -288,9 +292,16 @@ class MainScreen(BoxLayout):
             nausea = int(self.inputsection.nausea_value_box.text)
         except ValueError:
             nausea = 0
-        max_prices = calculate_max_prices(self.ride_values, self.age_values, ride_name, excitement, intensity, nausea, self.inputsection.free_entry_value)
+        EIN_multipliers = get_EIN_values_for_ride(ride_name)
+        EIN = (excitement, intensity, nausea)
+        max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
+        # max_prices = calculate_max_prices(self.ride_values, self.age_values, ride_name, excitement, intensity, nausea, self.inputsection.free_entry_value)
         # show the prices in the pricetable
         self.pricetable.write_pricetable(max_prices)
+    
+    # save EIN to the database
+    def calculate_and_save(self, widget, value=None):
+        pass
 
     def ride_name_box_focus(self, widget, value):
         if value:
@@ -302,8 +313,9 @@ class MainScreen(BoxLayout):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.ride_values = read_ride_values()
-        self.age_values = read_age_values()
+        # self.ride_values = read_ride_values()
+        # self.age_values = read_age_values()
+        # self.age_values = get_age_modifiers()
         # description of the app
         self.add_widget(DescriptionText(height=dp(75), size_hint=(0.6, None), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         # section where you input the name and ratings of your ride
