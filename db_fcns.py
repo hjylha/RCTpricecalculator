@@ -42,6 +42,11 @@ def find_ride_info(ride_name):
                         'rideBonusValue': ride[2],
                         'ride_id': ride[0]}}
 
+
+def get_ride_rowid(ride_name):
+    ride_info = find_ride_info(ride_name)
+    return ride_info[ride_name]['ride_id']
+
 def get_EIN_values_for_ride(ride_name):
     ride_info = find_ride_info(ride_name)
     return (ride_info[ride_name]['excitementValue'], ride_info[ride_name]['intensityValue'], ride_info[ride_name]['nauseaValue'])
@@ -51,20 +56,4 @@ def get_default_EIN_for_ride(ride_name):
     return (ride_info[ride_name]['defaultExcitement'], ride_info[ride_name]['defaultIntensity'], ride_info[ride_name]['defaultNausea'])
 
 
-# saving EIN values to db
-# table name = str(rowid)
-def get_table_name_for_ride(ride_name):
-    ride_info = find_ride_info(ride_name)
-    if ride_info[ride_name]['alias_of'] is not None:
-        return str(ride_info[ride_name]['alias_of'])
-    return str(ride_info[ride_name]['ride_id'])
 
-def create_table_for_ride(ride_name):
-    table_name = get_table_name_for_ride(ride_name)
-    columns = create_EIN_columns()
-    db.create_table(table_name, columns)
-
-def insert_values_for_ride(ride_name, EIN):
-    table_name = get_table_name_for_ride(ride_name)
-    columns = create_EIN_columns().keys()
-    db.insert_data(table_name, columns, EIN)

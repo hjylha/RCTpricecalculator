@@ -25,7 +25,14 @@ def create_age_columns():
         'modifier_type_classic': ('TEXT', 'NOT NULL'),
         'modifier_classic': ('INTEGER', 'NOT NULL')}
 
+# create dict with columns for EIN modifiers
 def create_EIN_columns():
     return {'excitement': ('INTEGER', 'NOT NULL'),
             'intensity': ('INTEGER', 'NOT NULL'),
             'nausea': ('INTEGER', 'NOT NULL')}
+
+# create dict with columns for default EIN values
+def create_default_EIN_columns():
+    return {'defaultExcitement': ('INTEGER',),
+            'defaultIntensity': ('INTEGER',),
+            'defaultNausea': ('INTEGER',)}

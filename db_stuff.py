@@ -18,17 +18,17 @@ def create_table_command(table_name, column_data):
     for key, value in column_data.items():
         if not first:
             command += ', '
+        else:
+            first = False
         command += key + ' '
         # command += ' '
         for thing in value:
             command += thing + ' '
-        if first:
-            first = False
     command += ');'
     return command
 
-# INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...);
-def insert_into_command(table_name, columns, data):
+# INSERT INTO table_name (column1, column2, ...) VALUES (? , ?, ...);
+def insert_into_command(table_name, columns):
     command = 'INSERT INTO '
     command += table_name
     command += ' ('
@@ -36,20 +36,34 @@ def insert_into_command(table_name, columns, data):
     for column in columns:
         if not first:
             command += ', '
+        else:
+            first= False
         command += column + ' '
-        if first:
-            first = False
     command += ') VALUES ('
     first = True
-    for value in data:
+    for _ in columns:
         if not first:
             command += ', '
+        else:
+            first = False
         # command += str(value) + ' '
         command += '? '
-        if first:
-            first = False
     command += ');'
     return command
+
+# UPDATE table_name SET columns[0] = ?, columns[1] = ?, ... WHERE rowid = rowid;
+def update_command_w_rowid(table_name, columns):
+    command = 'UPDATE ' + table_name + ' SET '
+    first = True
+    for column in columns:
+        if not first:
+            command += ', '
+        else:
+            first = False
+        command += column + ' = ? '
+    command += ' WHERE rowid = ?;'
+    return command
+
 
 # SELECT columns[0], columns[1], ... FROM table_name;
 def select_column_command(table_name, columns):
@@ -82,8 +96,27 @@ def create_table(table_name, column_data):
 def insert_data(table_name, columns, data):
     conn = make_connection()[0]
     with conn:
-        command = insert_into_command(table_name, columns, data)
+        command = insert_into_command(table_name, columns)
         # print(command)
+        conn.execute(command, data)
+    conn.close()
+
+# insert data to a table which may or may not exist
+def insert_data_and_create_table_if_not_created(table_name, column_data, data):
+    try:
+        insert_data(table_name, column_data.keys(), data)
+    # this can fail badly if there is another operationalerror...
+    except sqlite3.OperationalError:
+        create_table(table_name, column_data)
+        insert_data(table_name, column_data.keys(), data)
+
+# update data in specific columns in a row given by rowid
+def update_data_by_rowid(table_name, columns, new_data, rowid):
+    conn = make_connection()[0]
+    with conn:
+        command = update_command_w_rowid(table_name, columns)
+        data = list(new_data)
+        data.append(rowid)
         conn.execute(command, data)
     conn.close()
 
