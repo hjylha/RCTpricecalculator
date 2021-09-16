@@ -14,6 +14,7 @@ from kivy.properties import BooleanProperty
 # from calc import read_ride_values, read_age_values, calculate_max_prices
 from calc import get_suggestions_for_ride_name, get_EIN_value, calculate_price_table
 from db_fcns import get_age_modifiers, get_ride_names, get_EIN_values_for_ride
+from modify_db import insert_values_for_ride
 
 
 class DescriptionText(BoxLayout):
@@ -306,8 +307,23 @@ class MainScreen(BoxLayout):
     
     # save EIN to the database
     def calculate_and_save(self, widget, value=None):
-        self.calculate_price(widget)
-        # TODO
+        ride_name = self.inputsection.ride_name_box.text.lower()
+        # if ride_name is not good, do nothing
+        if ride_name == '':
+            return
+        if ride_name not in self.inputsection.ride_name_box.ride_names:
+            # should more be done here?
+            return
+        EIN = self.get_EIN_values()
+        # ignore too low values
+        if EIN[0] < 10:
+            if EIN[1] < 10 and EIN[2] < 10:
+                return
+        insert_values_for_ride(ride_name, EIN)
+        # calculate prices
+        EIN_multipliers = get_EIN_values_for_ride(ride_name)
+        max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
+        self.pricetable.write_pricetable(max_prices)
 
     def ride_name_box_focus(self, widget, value):
         if value:
