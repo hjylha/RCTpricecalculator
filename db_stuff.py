@@ -133,8 +133,12 @@ def select_columns(table_name, columns):
 def select_all(table_name):
     conn, cur = make_connection()
     with conn:
-        cur.execute('SELECT rowid, * FROM ' + table_name)
-        all_things = cur.fetchall()
+        try:
+            cur.execute('SELECT rowid, * FROM ' + table_name)
+            all_things = cur.fetchall()
+        except sqlite3.OperationalError:
+            # table_name not found, presumably
+            all_things = None
     return all_things
 
 # get info on row with specific rowid
