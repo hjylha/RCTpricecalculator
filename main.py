@@ -13,7 +13,7 @@ from kivy.properties import BooleanProperty
 # handling the RCT data and calculations
 # from calc import read_ride_values, read_age_values, calculate_max_prices
 from calc import get_suggestions_for_ride_name, get_EIN_value, calculate_price_table
-from db_fcns import get_age_modifiers, get_ride_names, get_EIN_values_for_ride
+from db_fcns import get_age_modifiers, get_ride_names, get_EIN_values_for_ride, get_default_EIN_for_ride
 from modify_db import insert_values_for_ride
 
 
@@ -106,6 +106,19 @@ class RideTextBox(TextInput):
 class InputSection(GridLayout):
     free_entry_value = BooleanProperty(True)
 
+    def set_default_EIN_values(self, ride_name):
+        # if ride_name not in self.ride_name_box.ride_names:
+        #     return
+        default_EIN = get_default_EIN_for_ride(ride_name)
+        # None is not a good default value
+        if default_EIN[0] is None or default_EIN[1] is None or default_EIN[2] is None:
+            print('no defaults')
+            return
+        # set EIN values in textinputs to default
+        self.excitement_value_box.text = str(default_EIN[0])
+        self.intensity_value_box.text = str(default_EIN[1])
+        self.nausea_value_box.text = str(default_EIN[2])
+
     def when_textinput_in_focus(self, widget, value):
         # close ride name dropdown if applicable
         # if widget != self.ride_name_box:
@@ -113,6 +126,10 @@ class InputSection(GridLayout):
         # highlight previous text (if any)
         if value:
             self.ride_name_box.real_focus = False
+            # if no values in textinputs, set default ones
+            if self.ride_name_box.text in self.ride_name_box.ride_names:
+                if self.excitement_value_box.text == '' and self.intensity_value_box.text == '' and self.nausea_value_box.text == '':
+                    self.set_default_EIN_values(self.ride_name_box.text)
             widget.select_all()
         
     def close_ride_name_dropdown(self, widget, value):
