@@ -112,7 +112,6 @@ class InputSection(GridLayout):
         default_EIN = get_default_EIN_for_ride(ride_name)
         # None is not a good default value
         if default_EIN[0] is None or default_EIN[1] is None or default_EIN[2] is None:
-            print('no defaults')
             return
         # set EIN values in textinputs to default
         self.excitement_value_box.text = str(default_EIN[0])
