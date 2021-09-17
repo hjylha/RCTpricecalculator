@@ -29,6 +29,7 @@ def add_ride(ride_data):
     columns = create_rides_columns().keys()
     insert_data(ride_table_name, columns, ride_data)
 
+# not sure if more general updates are necessary
 def update_ride_values(ride_data):
     pass
 
@@ -42,20 +43,33 @@ def update_default_values(ride_name, new_default_EIN):
 def calculate_average_EIN(ride_name):
     table = get_table_name_for_ride(ride_name)
     all_data = select_all(table)
+    # in case of errors, return nothing
+    if all_data is None:
+        return None
     e_values, i_values, n_values = [], [], []
     for data in all_data:
         e_values.append(data[1])
         i_values.append(data[2])
         n_values.append(data[3])
-    e_average = statistics.mean(e_values)
-    i_average = statistics.mean(i_values)
-    n_average = statistics.mean(n_values)
+    e_average = int(statistics.mean(e_values))
+    i_average = int(statistics.mean(i_values))
+    n_average = int(statistics.mean(n_values))
     return (e_average, i_average, n_average)
 
 # calculate average EIN and set them as default
 def set_average_values_as_default(ride_name):
     average_EIN = calculate_average_EIN(ride_name)
-    update_default_values(ride_name, average_EIN)
+    if average_EIN is not None:
+        update_default_values(ride_name, average_EIN)
+    else:
+        print(ride_name, 'does not have recorded ratings')
+
+# do averaging for all rides
+def set_average_values_as_default_for_all():
+    ride_names = get_ride_names()
+    for ride in ride_names:
+        set_average_values_as_default(ride)
+
 
 # add new row to ride table, which is a duplicate of an old row except for the name
 def add_alias(new_ride_name, old_ride_name):
