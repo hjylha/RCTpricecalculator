@@ -1,0 +1,15 @@
+ride,alias
+classic mini coaster,
+coffee cup ride,twist
+diamond ride,twist
+dinosaur egg ride,twist
+hall of mirrors,
+haunted jail house,
+hyper-twister,
+hypercoaster,
+monster trucks,
+pirate ship,swinging ship
+spinning wild mouse,
+time machine,
+tommy gun ride,twist
+water slide,dinghy slide
