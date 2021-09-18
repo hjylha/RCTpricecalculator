@@ -110,34 +110,32 @@ def calculate_ride_value(EIN_multipliers, EIN):
         ride_value += (EIN[i] * EIN_multipliers[i]) // 1024
     return ride_value
 
+# age_value = {'modifier': num, 'modifier_type': char, 'modifier_classic': num, 'modifier_type_classic': char}
+def calculate_price_w_age(ride_value, age_value, free_entry):
+    if not free_entry:
+        # in case of pay-for-entry, prices are quarter of those with free entry
+        ride_value = (ride_value // 4)
+    multiplier, multiplier_c = age_value['modifier'], age_value['modifier_classic']
+    # non-unique prices are three quarters of unique prices
+    price_unique = maximize(rounding(ride_value * multiplier))
+    price = maximize(rounding((3* ride_value // 4) * multiplier))
+    if age_value['modifier_type_classic'] == '*':
+        price_unique_c = maximize(rounding(ride_value * multiplier_c))
+        price_c = maximize(rounding((3*ride_value // 4) * multiplier_c))
+    else:
+        price_unique_c = maximize(rounding(100 * (ride_value+multiplier_c)))
+        price_c = maximize(rounding(300 * (ride_value+multiplier_c) // 4))
+    return (price_unique, price, price_unique_c, price_c)
+
 # calculate_prices based on ride value and age values
-def calculate_prices(ride_value, age_values, free_entry=True):
+def calculate_prices(ride_value, age_values, free_entry):
     max_prices = []
     for age in age_values:
-        price_unique = maximize(rounding(ride_value * age['modifier']))
-        
-        price = maximize(rounding(((3 * ride_value / 4) // 1) * age['modifier']))
-        if age['modifier_type_classic'] == '*':
-            price_unique_c = maximize(rounding(ride_value * age['modifier_classic']))
-            price_c = maximize(rounding((int(3 * ride_value / 4)) * age['modifier_classic']))
-        else:
-            price_unique_c = maximize(rounding(100 * (ride_value + age['modifier_classic'])))
-            price_c = maximize(rounding(300 * (ride_value + age['modifier_classic']) / 4))
-        max_prices.append((price_unique, price, price_unique_c, price_c))
-    # if also pay-for-entry, prices are quarter of that of free entry
-    if not free_entry:
-        new_max_prices = []
-        for price_line in max_prices:
-            new_price_line = []
-            for price in price_line:
-                price = price // 4
-                price = price // 10 * 10
-                new_price_line.append(price)
-            new_max_prices.append(tuple(new_price_line))
-        max_prices = new_max_prices
+        price_line = calculate_price_w_age(ride_value, age, free_entry)
+        max_prices.append(price_line)
     return max_prices
 
-# create the calculator
+
 # EIN as integers (i.e. multiplied by 100)
 def calculate_price_table(EIN_multipliers, EIN, age_values, free_entry=True):
     ride_value = calculate_ride_value(EIN_multipliers, EIN)
@@ -162,7 +160,7 @@ def calculate_max_price(ride_type, excitement, intensity, nausea, free_entry=Tru
     age_values = read_age_values()
     return calculate_max_prices(ride_values, age_values, ride_type, excitement, intensity, nausea, free_entry)
     
-
+# create the calculator to run in terminal
 def calculator():
     ride_name = input('What is the ride type? ')
     print('Type the rating values of the ride without dots, i.e. multiplied by 100.')
