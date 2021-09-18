@@ -14,7 +14,7 @@ from kivy.properties import BooleanProperty
 # from calc import read_ride_values, read_age_values, calculate_max_prices
 from calc import get_suggestions_for_ride_name, get_EIN_value, calculate_price_table
 from db_fcns import get_age_modifiers, get_ride_names, get_EIN_values_for_ride, get_default_EIN_for_ride
-from modify_db import insert_values_for_ride
+from modify_db import insert_values_for_ride, set_average_values_as_default
 
 
 class DescriptionText(BoxLayout):
@@ -336,6 +336,8 @@ class MainScreen(BoxLayout):
             if EIN[1] < 10 and EIN[2] < 10:
                 return
         insert_values_for_ride(ride_name, EIN)
+        # update default values
+        set_average_values_as_default(ride_name)
         # calculate prices
         EIN_multipliers = get_EIN_values_for_ride(ride_name)
         max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
