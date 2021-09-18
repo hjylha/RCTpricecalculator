@@ -1,4 +1,3 @@
-from os import stat
 from db_setup import create_default_EIN_columns, create_EIN_columns, ride_table_name, create_rides_columns
 from db_stuff import create_table, insert_data, select_all, select_rows_by_column_value, update_data_by_rowid, insert_data_and_create_table_if_not_created
 from db_fcns import get_ride_names, find_ride_info, get_ride_rowid
