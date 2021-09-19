@@ -10,6 +10,7 @@ from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.dropdown import DropDown
 from kivy.properties import BooleanProperty
+from kivy.graphics import Color, Rectangle
 # handling the RCT data and calculations
 # from calc import read_ride_values, read_age_values, calculate_max_prices
 from calc import get_suggestions_for_ride_name, get_EIN_value, calculate_price_table
@@ -233,21 +234,55 @@ def price_as_string(price):
         return '  ' + price_s[0] + '.' + price_s[1:]
     return price_s[:2] + '.' + price_s[2:]
 
-# something like price1 | price2 ?? since these are not really related
-# def format_prices(price1, price2):
-#     text1 = price_as_string(price1)
-#     text2 = price_as_string(price2)
-#     return text1 + '      |      ' + text2
+# the better the price, the greener the price
+# but mostly just kinda random color decisions
+def price_color(price):
+    # zero price is red
+    if price == 0:
+        return (1, 0, 0, 1)
+    # turn price to a number between 0 and 100
+    mult = price // 20
+    # high prices are green
+    if mult > 49:
+        mult = (mult - 50) // 2
+        return (0, 0.75 + 0.01*mult, 0, 1)
+    # less green, maybe blue
+    if mult > 19:
+        return (0, 0.4 + 0.01*mult, 0.8 - 0.01*mult)
+    # adding some red perhaps
+    if mult > 4:
+        return (0.4 - 0.01*mult, 0.02 * mult, 0.8 - 0.01*mult, 1)
+    # more red for prices under 1 euro/dollar/etc
+    mult *= 2
+    return (0.9- 0.05*mult, 0, 0.4 + 0.05 * mult, 1)
+
 
 class PriceTable(GridLayout):
+
+    # background color for each row of the pricetable
+    # just alternating colors for now
+    def row_color(self, row_num):
+        if row_num % 2 == 0:
+            return (0.05, 0.05, 0.05, 1)
+        return (0, 0, 0.05, 1)
+
+    # resize boxlayout background
+    def update_boxlayout(self, widget, value):
+        widget.rect.pos = widget.pos
+        widget.rect.size = widget.size
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # self.age_values = read_age_values()
         self.age_values = get_age_modifiers()
         # 12 rows, 1? + 2 + 2 columns of boxlayouts
         self.table = [BoxLayout() for _ in range(36)]
-        for layout in self.table:
+        for i, layout in enumerate(self.table):
             self.add_widget(layout)
+            with layout.canvas.before:
+                Color(*self.row_color(i // 3))
+                layout.rect = Rectangle(size=layout.size, pos=layout.pos)
+            layout.bind(pos=self.update_boxlayout, size=self.update_boxlayout)
         # 3 labels in the first row
         cell1 = Label(text='Age (in months)')
         self.table[0].add_widget(cell1)
@@ -271,6 +306,8 @@ class PriceTable(GridLayout):
         # place age ranges in the pricetable
         for i, line in enumerate(self.age_values):
             self.labels[8 + 5*i].text = format_age_ranges(line['from'], line['to'])
+            # coloring the text by row seems not ideal
+            # self.labels[8 + 5*i].color = self.row_color(i)
 
     def clear_pricetable(self):
         for i in range(len(self.age_values)):
@@ -281,6 +318,7 @@ class PriceTable(GridLayout):
         for i, priceline in enumerate(max_prices):
             for j in range(4):
                 self.labels[9 + 5*i + j].text = price_as_string(priceline[j])
+                self.labels[9 + 5*i + j].color = price_color(priceline[j])
 
 
 class MainScreen(BoxLayout):
@@ -301,6 +339,7 @@ class MainScreen(BoxLayout):
             intensity = get_EIN_value(intensity_str, True)
             nausea = get_EIN_value(nausea_str, True)
             return (excitement, intensity, nausea)
+        # otherwise, we assume EIN is multiplied by 100
         excitement = get_EIN_value(excitement_str)
         intensity = get_EIN_value(intensity_str)
         nausea = get_EIN_value(nausea_str)
@@ -353,16 +392,13 @@ class MainScreen(BoxLayout):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # self.ride_values = read_ride_values()
-        # self.age_values = read_age_values()
-        # self.age_values = get_age_modifiers()
         # description of the app
         self.add_widget(DescriptionText(height=dp(75), size_hint=(0.6, None), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         # section where you input the name and ratings of your ride
         self.inputsection = InputSection(height=dp(200), size_hint=(0.8, None), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         self.add_widget(self.inputsection)
 
-        # buttons to clear inputs, and calculate prices (which should not be necessary)
+        # buttons to clear inputs, and save ratings from input to database
         buttons = BoxLayout(size_hint=(0.6, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         # self.clear_button = Button(text='Clear', on_press=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         buttons.add_widget(Button(text='Clear', on_press=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
