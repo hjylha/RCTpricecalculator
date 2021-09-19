@@ -14,6 +14,11 @@ To launch the calculator, type
 `python main.py`
 
 
+### Some notes
+
+* Currently the database has at least one set of ratings for each ride. These ratings I have put in based on my saves.
+
+* Database updates the default (average) ratings whenever a new set of ratings is saved to the database.
 
 ### Things to maybe add
 
@@ -24,3 +29,5 @@ To launch the calculator, type
 * Making database functions less susceptible to errors
 
 * Add missing rides (and aliases)
+
+* Handling different modes for rides (Top Spin, Motion Simulator, etc)
