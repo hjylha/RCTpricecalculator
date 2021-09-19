@@ -12,8 +12,11 @@ from kivy.uix.dropdown import DropDown
 from kivy.properties import BooleanProperty
 from kivy.graphics import Color, Rectangle
 # handling the RCT data and calculations
+# from main_setup import format_age_ranges, no_match_text, get_suggestions_for_ride_name, get_EIN_value
+# from main_setup import price_as_string, price_color
+import main_setup as ms
 # from calc import read_ride_values, read_age_values, calculate_max_prices
-from calc import get_suggestions_for_ride_name, get_EIN_value, calculate_price_table
+from calc import calculate_price_table
 from db_fcns import get_age_modifiers, get_ride_names, get_EIN_values_for_ride, get_default_EIN_for_ride
 from modify_db import insert_values_for_ride, set_average_values_as_default
 
@@ -57,7 +60,7 @@ class RideTextBox(TextInput):
         # clear dropdown just in case
         self.dropdown.clear_widgets()
         # get suggestions and place them in the dropdown
-        new_sugg = get_suggestions_for_ride_name(text, self.ride_names, self.max_num_of_suggestions)
+        new_sugg = ms.get_suggestions_for_ride_name(text, self.ride_names, self.max_num_of_suggestions)
         self.num_of_suggestions = len(new_sugg)
         for i in range(self.num_of_suggestions):
             self.suggestions[i].text = new_sugg[i]
@@ -85,7 +88,7 @@ class RideTextBox(TextInput):
         # self.ride_names = read_ride_values().keys()
         self.ride_names = get_ride_names()
         self.dropdown = DropDown()
-        self.no_match_text = 'No match found'
+        self.no_match_text = ms.no_match_text
         self.real_focus = False
         # max 5 suggestions
         self.max_num_of_suggestions = 5
@@ -207,54 +210,7 @@ class InputSection(GridLayout):
 #         super().__init__(**kwargs)
 
 
-# if len(word) < num_of_letters, add two spaces for each 'missing' letter
-def add_double_spaces(word, num_of_letters):
-    # if len(word) >= num_of_letters:
-    #     return word
-    formatted_word = word
-    for _ in range(num_of_letters - len(word)):
-        formatted_word += '  '
-    return formatted_word
 
-# how to show age1 - age2 as a string
-def format_age_ranges(age1, age2):
-    text1 = add_double_spaces(str(age1), 3)
-    text2 = add_double_spaces(str(age2), 3)
-    return text1 + '  ...  ' + text2
-
-
-# divide by 100 and add spaces
-def price_as_string(price):
-    price_s = str(price)
-    if price == 0:
-        return '  0.00'
-    if price < 100:
-        return '  0.' + price_s
-    if price < 1000:
-        return '  ' + price_s[0] + '.' + price_s[1:]
-    return price_s[:2] + '.' + price_s[2:]
-
-# the better the price, the greener the price
-# but mostly just kinda random color decisions
-def price_color(price):
-    # zero price is red
-    if price == 0:
-        return (1, 0, 0, 1)
-    # turn price to a number between 0 and 100
-    mult = price // 20
-    # high prices are green
-    if mult > 49:
-        mult = (mult - 50) // 2
-        return (0, 0.75 + 0.01*mult, 0, 1)
-    # less green, maybe blue
-    if mult > 19:
-        return (0, 0.4 + 0.01*mult, 0.8 - 0.01*mult)
-    # adding some red perhaps
-    if mult > 4:
-        return (0.4 - 0.01*mult, 0.02 * mult, 0.8 - 0.01*mult, 1)
-    # more red for prices under 1 euro/dollar/etc
-    mult *= 2
-    return (0.9- 0.05*mult, 0, 0.4 + 0.05 * mult, 1)
 
 
 class PriceTable(GridLayout):
@@ -263,8 +219,8 @@ class PriceTable(GridLayout):
     # just alternating colors for now
     def row_color(self, row_num):
         if row_num % 2 == 0:
-            return (0.05, 0.05, 0.05, 1)
-        return (0, 0, 0.05, 1)
+            return (1/16, 1/16, 1/16, 1)
+        return (1/16, 1/16, 0, 1)
 
     # resize boxlayout background
     def update_boxlayout(self, widget, value):
@@ -305,7 +261,7 @@ class PriceTable(GridLayout):
         self.labels[5].text = self.labels[7].text = 'non-unique'
         # place age ranges in the pricetable
         for i, line in enumerate(self.age_values):
-            self.labels[8 + 5*i].text = format_age_ranges(line['from'], line['to'])
+            self.labels[8 + 5*i].text = ms.format_age_ranges(line['from'], line['to'])
             # coloring the text by row seems not ideal
             # self.labels[8 + 5*i].color = self.row_color(i)
 
@@ -317,8 +273,8 @@ class PriceTable(GridLayout):
     def write_pricetable(self, max_prices):
         for i, priceline in enumerate(max_prices):
             for j in range(4):
-                self.labels[9 + 5*i + j].text = price_as_string(priceline[j])
-                self.labels[9 + 5*i + j].color = price_color(priceline[j])
+                self.labels[9 + 5*i + j].text = ms.price_as_string(priceline[j])
+                self.labels[9 + 5*i + j].color = ms.price_color(priceline[j])
 
 
 class MainScreen(BoxLayout):
@@ -333,17 +289,7 @@ class MainScreen(BoxLayout):
         excitement_str = self.inputsection.excitement_value_box.text
         intensity_str = self.inputsection.intensity_value_box.text
         nausea_str = self.inputsection.nausea_value_box.text
-        # if user uses actual values
-        if ('.' in excitement_str) or ('.' in intensity_str) or ('.' in nausea_str):
-            excitement = get_EIN_value(excitement_str, True)
-            intensity = get_EIN_value(intensity_str, True)
-            nausea = get_EIN_value(nausea_str, True)
-            return (excitement, intensity, nausea)
-        # otherwise, we assume EIN is multiplied by 100
-        excitement = get_EIN_value(excitement_str)
-        intensity = get_EIN_value(intensity_str)
-        nausea = get_EIN_value(nausea_str)
-        return (excitement, intensity, nausea)
+        return ms.get_EIN_values((excitement_str, intensity_str, nausea_str))
         
     def calculate_price(self, widget, value=None):
         ride_name = self.inputsection.ride_name_box.text.lower()

@@ -1,4 +1,5 @@
 
+# read data from files
 def read_ride_values():
     ride_values = dict()
     with open('ride_values.csv', 'r') as file:
@@ -44,52 +45,6 @@ def read_age_values():
                 age_values[i]['modifier_classic'] = int(dataline[2])
     return age_values
 
-
-# try to find ride names containing given text_input
-def get_suggestions_for_ride_name(text_input, ride_names, num_of_suggestions):
-    suggestions = []
-    num = len(text_input)
-    # match with start of ride name
-    for name in ride_names:
-        if len(suggestions) >= num_of_suggestions:
-            return suggestions
-        if name.startswith(text_input):
-            suggestions.append(name)
-    # match with any part of ride name
-    for name in ride_names:
-        if len(suggestions) >= num_of_suggestions:
-            return suggestions
-        if len(name) > num:
-            for i in range(1, len(name)- num + 1):
-                if name[i:].startswith(text_input):
-                    if name not in suggestions:
-                        suggestions.append(name)
-    # if nothing found, that is the suggestion
-    if suggestions == []:
-        suggestions.append('No match found')
-    return suggestions
-
-
-# trying to make words same length (this is probably not needed)
-def add_empty_space_at_the_end(word, length):
-    if len(word) < length:
-        new_word = word
-        for _ in range(length - len(word)):
-            new_word = new_word + ' '
-        return new_word
-    return word
-
-# turn inputted EIN value into correct form
-def get_EIN_value(input_value, is_float=False):
-    if is_float:
-        try:
-            return int(float(input_value) * 100)
-        except ValueError:
-            return 0
-    try:
-        return int(input_value)
-    except ValueError:
-        return 0
 
 # little functions for the calculator
 def rounding(num):
@@ -160,6 +115,17 @@ def calculate_max_price(ride_type, excitement, intensity, nausea, free_entry=Tru
     age_values = read_age_values()
     return calculate_max_prices(ride_values, age_values, ride_type, excitement, intensity, nausea, free_entry)
     
+
+# trying to make words same length (this is probably not needed)
+def add_empty_space_at_the_end(word, length):
+    if len(word) < length:
+        new_word = word
+        for _ in range(length - len(word)):
+            new_word = new_word + ' '
+        return new_word
+    return word
+
+
 # create the calculator to run in terminal
 def calculator():
     ride_name = input('What is the ride type? ')
