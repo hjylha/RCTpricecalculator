@@ -7,18 +7,22 @@ Yes, this already exists at <https://rct2calc.shottysteve.com/> and probably oth
 
 The calculator uses kivy for its GUI. More detailed list of dependencies can be found in *requirements.txt*.
 
-This app offers the possibility to save excitement-intensity-nausea ratings to a database. The app then uses these saved ratings to set default values for the ratings. Currently the default is just the arithmetic mean of saved ratings.
+This app offers the possibility to save excitement-intensity-nausea (EIN) ratings to a database. The app then uses these saved ratings to set default values for the ratings. Currently the default is just the arithmetic mean of saved ratings.
 
 To launch the calculator, type
 
 `python main.py`
 
 
-### Some notes
+### Some features
 
 * Currently the database has at least one set of ratings for each ride. These ratings I have put in based on my saves.
 
 * Database updates the default (average) ratings whenever a new set of ratings is saved to the database.
+
+* If ride name is recognized and the rating input boxes are empty, the calculator fills them with default values.
+
+* By default, calculator takes as inputs EIN ratings multiplied by 100 (so that ratings are integers). However, calculator can handle actual (decimal) ratings as well, as long as it recognizes that they are decimal numbers.
 
 ### Things to maybe add
 
