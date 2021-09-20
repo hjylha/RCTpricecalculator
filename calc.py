@@ -1,50 +1,5 @@
-
-# read data from files
-def read_ride_values():
-    ride_values = dict()
-    with open('ride_values.csv', 'r') as file:
-        for line in file:
-            dataline0 = line.split(';')[0]
-            dataline = dataline0.split(',')
-            # name in lowercase just in case
-            name = dataline[0].lower()
-            ride_values[name] = dict()
-            ride_values[name]['excitementValue'] = int(dataline[1])
-            ride_values[name]['intensityValue'] = int(dataline[2])
-            ride_values[name]['nauseaValue'] = int(dataline[3])
-            ride_values[name]['rideBonusValue'] = int(dataline[4])
-    return ride_values
-
-# just consider integers
-def read_age_values():
-    age_values = []
-    with open('age_modifiers.csv', 'r') as file:
-        for line in file:
-            dataline0 = line.split(';')[0]
-            if dataline0 == '':
-                break
-            dataline = dataline0.split(',')
-            age_value = {'from': int(dataline[0])}
-            try:
-                age_value['to'] = int(dataline[1])
-            except ValueError:
-                age_value['to'] = ''
-            age_value['modifier_type'] = dataline[3]
-            age_value['modifier'] = int(100 * float(dataline[2]))
-            age_values.append(age_value)
-    with open('age_modifiers_classic.csv', 'r') as file:
-        for i, line in enumerate(file):
-            dataline0 = line.split(';')[0]
-            if dataline0 == '':
-                break
-            dataline = dataline0.split(',')
-            age_values[i]['modifier_type_classic'] = dataline[3]
-            if dataline[3] == '*':
-                age_values[i]['modifier_classic'] = int(100* float(dataline[2]))
-            else:
-                age_values[i]['modifier_classic'] = int(dataline[2])
-    return age_values
-
+# fcns for using csv files
+from get_data import read_ride_values, read_age_values
 
 # little functions for the calculator
 def rounding(num):
@@ -96,6 +51,8 @@ def calculate_price_table(EIN_multipliers, EIN, age_values, free_entry=True):
     ride_value = calculate_ride_value(EIN_multipliers, EIN)
     return calculate_prices(ride_value, age_values, free_entry)
 
+
+# other way to calculate prices, aimed for the case where ride_values are read from files
 def calculate_max_prices(ride_values, age_values, ride_type, excitement, intensity, nausea, free_entry=True):
     if ride_type.lower() in ride_values.keys():
         e_multiplier = ride_values[ride_type]['excitementValue']
