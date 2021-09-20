@@ -36,3 +36,7 @@ def create_default_EIN_columns():
     return {'defaultExcitement': ('INTEGER',),
             'defaultIntensity': ('INTEGER',),
             'defaultNausea': ('INTEGER',)}
+
+# table name for table storing EIN ratings of a ride w rowid 37 is 'ein37'
+def table_for_EIN_ratings(rowid):
+    return 'ein' + str(rowid)

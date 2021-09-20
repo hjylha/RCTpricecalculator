@@ -11,14 +11,11 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.dropdown import DropDown
 from kivy.properties import BooleanProperty
 from kivy.graphics import Color, Rectangle
-# handling the RCT data and calculations
-# from main_setup import format_age_ranges, no_match_text, get_suggestions_for_ride_name, get_EIN_value
-# from main_setup import price_as_string, price_color
+# some fcns related to main
 import main_setup as ms
-# from calc import read_ride_values, read_age_values, calculate_max_prices
+# handling the RCT data and calculations
 from calc import calculate_price_table
-from db_fcns import get_age_modifiers, get_ride_names, get_EIN_values_for_ride, get_default_EIN_for_ride
-from modify_db import insert_values_for_ride, set_average_values_as_default
+import db_fcns as dbf
 
 
 class DescriptionText(BoxLayout):
@@ -86,7 +83,7 @@ class RideTextBox(TextInput):
         super().__init__(**kwargs)
 
         # self.ride_names = read_ride_values().keys()
-        self.ride_names = get_ride_names()
+        self.ride_names = dbf.get_ride_names()
         self.dropdown = DropDown()
         self.no_match_text = ms.no_match_text
         self.real_focus = False
@@ -113,7 +110,7 @@ class InputSection(GridLayout):
     def set_default_EIN_values(self, ride_name):
         # if ride_name not in self.ride_name_box.ride_names:
         #     return
-        default_EIN = get_default_EIN_for_ride(ride_name)
+        default_EIN = dbf.get_default_EIN_for_ride(ride_name)
         # None is not a good default value
         if default_EIN[0] is None or default_EIN[1] is None or default_EIN[2] is None:
             return
@@ -230,7 +227,7 @@ class PriceTable(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # self.age_values = read_age_values()
-        self.age_values = get_age_modifiers()
+        self.age_values = dbf.get_age_modifiers()
         # 12 rows, 1? + 2 + 2 columns of boxlayouts
         self.table = [BoxLayout() for _ in range(36)]
         for i, layout in enumerate(self.table):
@@ -300,7 +297,7 @@ class MainScreen(BoxLayout):
             # should more be done here?
             return
         EIN = self.get_EIN_values()
-        EIN_multipliers = get_EIN_values_for_ride(ride_name)
+        EIN_multipliers = dbf.get_EIN_values_for_ride(ride_name)
         max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
         # max_prices = calculate_max_prices(self.ride_values, self.age_values, ride_name, excitement, intensity, nausea, self.inputsection.free_entry_value)
         # show the prices in the pricetable
@@ -320,11 +317,11 @@ class MainScreen(BoxLayout):
         if EIN[0] < 10:
             if EIN[1] < 10 and EIN[2] < 10:
                 return
-        insert_values_for_ride(ride_name, EIN)
+        dbf.insert_values_for_ride_ratings(ride_name, EIN)
         # update default values
-        set_average_values_as_default(ride_name)
+        dbf.set_average_values_as_default(ride_name)
         # calculate prices
-        EIN_multipliers = get_EIN_values_for_ride(ride_name)
+        EIN_multipliers = dbf.get_EIN_values_for_ride(ride_name)
         max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
         self.pricetable.write_pricetable(max_prices)
 
