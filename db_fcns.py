@@ -1,15 +1,17 @@
 import statistics
-from db_setup import ride_table_name, age_table_name, create_rides_columns, create_EIN_columns, create_default_EIN_columns, table_for_EIN_ratings
-import db_stuff as db
+from db_setup import db_filename, ride_table_name, age_table_name, create_rides_columns, create_EIN_columns, create_default_EIN_columns, table_for_EIN_ratings
+from db_stuff import DB
 
 
 # get the list of ride names in the db
 def get_ride_names():
+    db = DB(db_filename)
     names0 = db.select_columns(ride_table_name, ('name',))
     return [name[0] for name in names0]
 
 # get age modifiers in the same form as before
 def get_age_modifiers():
+    db = DB(db_filename)
     age_modifiers = []
     age_modifiers0 = db.select_all(age_table_name)
     for age in age_modifiers0:
@@ -27,11 +29,13 @@ def get_age_modifiers():
 
 # test if name is unique
 def find_rides(ride_name):
+    db = DB(db_filename)
     rides = db.select_rows_by_column_value(ride_table_name, 'name', ride_name.lower())
     return rides
 
 # we assume that name is unique, since that is a restriction we have placed
 def find_ride_info(ride_name):
+    db = DB(db_filename)
     rides = db.select_rows_by_column_value(ride_table_name, 'name', ride_name.lower())
     # if len(rides) == 1:
     ride = rides[0]
@@ -66,23 +70,27 @@ def get_table_for_ride_ratings(ride_name):
     return table_for_EIN_ratings(get_ride_rowid(ride_name))
 
 def create_table_for_ride_ratings(ride_name):
+    db = DB(db_filename)
     table_name = get_table_for_ride_ratings(ride_name)
     columns = create_EIN_columns()
     db.create_table(table_name, columns)
 
 def insert_values_for_ride_ratings(ride_name, EIN):
+    db = DB(db_filename)
     table_name = get_table_for_ride_ratings(ride_name)
     columns = create_EIN_columns()
-    db.insert_data_and_create_table_if_not_created(table_name, columns, EIN)
+    db.insert_and_create_table_if_needed(table_name, columns, EIN)
 
 # set new default/average values for EIN
 def update_default_values(ride_name, new_default_EIN):
+    db = DB(db_filename)
     rowid = get_ride_rowid(ride_name)
     EIN_columns = create_default_EIN_columns()
-    db.update_data_by_rowid(ride_table_name, EIN_columns, new_default_EIN, rowid)
+    db.update_by_rowid(ride_table_name, EIN_columns, new_default_EIN, rowid)
 
 # calculate average EIN ratings
 def calculate_average_EIN(ride_name):
+    db = DB(db_filename)
     table = get_table_for_ride_ratings(ride_name)
     all_data = db.select_all(table)
     # in case of errors, return nothing
@@ -115,6 +123,7 @@ def set_average_values_as_default_for_all():
 
 # add a new ride to the ride table
 def add_ride(ride_data):
+    db = DB(db_filename)
     columns = create_rides_columns().keys()
     db.insert_data(ride_table_name, columns, ride_data)
 
@@ -127,6 +136,7 @@ def update_ride_values(ride_data):
 # add new row to ride table, which is a duplicate of an old row except for the name
 # maybe make a new table for aliases instead????????????
 def add_alias(new_ride_name, old_ride_name):
+    db = DB(db_filename)
     columns = create_rides_columns.keys()
     old_data = db.select_rows_by_column_value(ride_table_name, 'name', old_ride_name.lower())
     alias_of = old_data[0]
