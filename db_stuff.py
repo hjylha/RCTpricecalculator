@@ -73,7 +73,7 @@ def select_column_command(table_name, columns):
 
 
 # database class
-class DB:
+class DB_general:
     # initialize just by giving the location of the database, and maybe table_data as a dict
     def __init__(self, filepath_of_db, table_data=None) -> None:
         self.filepath = filepath_of_db
@@ -180,4 +180,14 @@ class DB:
         rows = self.select_rows_by_column_value(table_name, 'rowid', rowid)
         return rows[0]
 
+    # backup db to another file
+    def backup_db(self, new_filename):
+        backup_db = DB_general(new_filename, self.tables)
+        everything = self.get_everything()
+        backup_db.create_tables()
+        for table in everything:
+            if everything[table] is not None:
+                for item in everything[table]:
+                    # insert data, but ignore rowid
+                    backup_db.insert(table, self.tables[table].keys(), item[1:])
 
