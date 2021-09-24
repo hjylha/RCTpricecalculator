@@ -11,7 +11,7 @@ def get_suggestions_for_ride_name(text_input, ride_names, num_of_suggestions):
     for name in ride_names:
         if len(suggestions) >= num_of_suggestions:
             return suggestions
-        if name.startswith(text_input):
+        if name.lower().startswith(text_input.lower()):
             suggestions.append(name)
     # match with any part of ride name
     for name in ride_names:
@@ -19,7 +19,7 @@ def get_suggestions_for_ride_name(text_input, ride_names, num_of_suggestions):
             return suggestions
         if len(name) > num:
             for i in range(1, len(name)- num + 1):
-                if name[i:].startswith(text_input):
+                if name[i:].lower().startswith(text_input.lower()):
                     if name not in suggestions:
                         suggestions.append(name)
     # if nothing found, that is the suggestion
