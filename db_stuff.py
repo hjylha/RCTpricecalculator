@@ -174,6 +174,14 @@ class DB_general:
             cur.execute(command, (value,))
             rows = cur.fetchall()
         return rows
+
+    def select_rows_by_text_wo_capitalization(self, table_name, column, text):
+        conn, cur = self.connect()
+        with conn:
+            command = 'SELECT rowid, * FROM ' + table_name + ' WHERE ' + column + ' LIKE ?;'
+            cur.execute(command, (text,))
+            rows = cur.fetchall()
+        return rows
     
     # get info on row with specific rowid
     def select_row_by_rowid(self, table_name, rowid):
