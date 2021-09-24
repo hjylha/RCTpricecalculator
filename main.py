@@ -15,7 +15,8 @@ from kivy.graphics import Color, Rectangle
 import main_setup as ms
 # handling the RCT data and calculations
 from calc import calculate_price_table
-import db_fcns as dbf
+# import db_fcns as dbf
+from db_setup import DB
 
 
 class DescriptionText(BoxLayout):
@@ -23,6 +24,20 @@ class DescriptionText(BoxLayout):
 
 
 class RideTextBox(TextInput):
+
+    def is_name_ok(self):
+        ride_name = self.text.lower()
+        ride_names = (ride.lower() for ride in self.ride_names)
+        # if ride_name is not good, do nothing
+        if ride_name == '':
+            # print('no name')
+            return False
+        if ride_name not in ride_names:
+            # should more be done here?
+            # print('not in the list')
+            return False
+        return True
+
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
         # highlight suggestions with up and down, select one with right
         if self.dropdown.parent is not None and self.suggestions[0].text != self.no_match_text:
@@ -83,6 +98,7 @@ class RideTextBox(TextInput):
         super().__init__(**kwargs)
 
         # self.ride_names = read_ride_values().keys()
+        dbf = DB(DB.db_filename)
         self.ride_names = dbf.get_ride_names()
         self.dropdown = DropDown()
         self.no_match_text = ms.no_match_text
@@ -110,6 +126,7 @@ class InputSection(GridLayout):
     def set_default_EIN_values(self, ride_name):
         # if ride_name not in self.ride_name_box.ride_names:
         #     return
+        dbf = DB(DB.db_filename)
         default_EIN = dbf.get_default_EIN_for_ride(ride_name)
         # None is not a good default value
         if default_EIN[0] is None or default_EIN[1] is None or default_EIN[2] is None:
@@ -227,6 +244,7 @@ class PriceTable(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # self.age_values = read_age_values()
+        dbf = DB(DB.db_filename)
         self.age_values = dbf.get_age_modifiers()
         # 12 rows, 1? + 2 + 2 columns of boxlayouts
         self.table = [BoxLayout() for _ in range(36)]
@@ -275,6 +293,7 @@ class PriceTable(GridLayout):
 
 
 class MainScreen(BoxLayout):
+    dbf = DB(DB.db_filename)
     
     # if clear button is pressed, clear everything
     def clear_button_pressed(self, widget):
@@ -289,15 +308,11 @@ class MainScreen(BoxLayout):
         return ms.get_EIN_values((excitement_str, intensity_str, nausea_str))
         
     def calculate_price(self, widget, value=None):
-        ride_name = self.inputsection.ride_name_box.text.lower()
-        # if ride_name is not good, do nothing
-        if ride_name == '':
+        if not self.inputsection.ride_name_box.is_name_ok():
             return
-        if ride_name not in self.inputsection.ride_name_box.ride_names:
-            # should more be done here?
-            return
+        ride_name = self.inputsection.ride_name_box.text
         EIN = self.get_EIN_values()
-        EIN_multipliers = dbf.get_EIN_values_for_ride(ride_name)
+        EIN_multipliers = MainScreen.dbf.get_EIN_values_for_ride(ride_name)
         max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
         # max_prices = calculate_max_prices(self.ride_values, self.age_values, ride_name, excitement, intensity, nausea, self.inputsection.free_entry_value)
         # show the prices in the pricetable
@@ -305,23 +320,19 @@ class MainScreen(BoxLayout):
     
     # save EIN to the database
     def calculate_and_save(self, widget, value=None):
-        ride_name = self.inputsection.ride_name_box.text.lower()
-        # if ride_name is not good, do nothing
-        if ride_name == '':
+        if not self.inputsection.ride_name_box.is_name_ok():
             return
-        if ride_name not in self.inputsection.ride_name_box.ride_names:
-            # should more be done here?
-            return
+        ride_name = self.inputsection.ride_name_box.text
         EIN = self.get_EIN_values()
         # ignore too low values
         if EIN[0] < 10:
             if EIN[1] < 10 and EIN[2] < 10:
                 return
-        dbf.insert_values_for_ride_ratings(ride_name, EIN)
+        MainScreen.dbf.insert_values_for_ride_ratings(ride_name, EIN)
         # update default values
-        dbf.set_average_values_as_default(ride_name)
+        MainScreen.dbf.set_average_values_as_default(ride_name)
         # calculate prices
-        EIN_multipliers = dbf.get_EIN_values_for_ride(ride_name)
+        EIN_multipliers = MainScreen.dbf.get_EIN_values_for_ride(ride_name)
         max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
         self.pricetable.write_pricetable(max_prices)
 
