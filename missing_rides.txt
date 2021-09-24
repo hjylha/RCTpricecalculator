@@ -1,15 +1,33 @@
-ride,alias
-classic mini coaster,
+ride,alias,still_new
+classic mini coaster,mini coaster,!
+classic mini roller coaster,classic mini coaster
 coffee cup ride,twist
+corkscrew roller coaster,corkscrew coaster
 diamond ride,twist
 dinosaur egg ride,twist
+flying roller coaster,flying coaster
 hall of mirrors,
 haunted jail house,
-hyper-twister,
-hypercoaster,
-monster trucks,
+hybridcoaster,twister coaster,!?
+hyper-twister,twister coaster,!
+hypercoaster,????,!?
+inverted roller coaster,inverted coaster
+junior roller coaster,junior coaster
+lay down roller coaster,lay-down coaster
+LIM launched roller coaster,LIM launched coaster
+looping roller coaster,looping coaster
+mini roller coaster,mini coaster
+monster trucks,car ride,?
+multi dimension roller coaster,multi-dimension coaster
 pirate ship,swinging ship
-spinning wild mouse,
+reverser roller coaster,reverse coaster
+side friction roller coaster,side friction coaster
+single rail roller coaster,????,!?
+spinning wild mouse,steel wild mouse,!
+spiral roller coaster,spiral coaster
+stand up roller coaster,stand-up coaster
 time machine,
 tommy gun ride,twist
+twister roller coaster,twister coaster
 water slide,dinghy slide
+wooden roller coaster,wooden coaster
