@@ -3,9 +3,9 @@ from get_data import read_age_values  # probably should get rid of this
 from pathlib import Path
 from statistics import mean
 
-db_filename = 'rct_data.db'
-ride_table_name = "rides"
-age_table_name = "age_modifiers"
+# db_filename = 'rct_data.db'
+# ride_table_name = "rides"
+# age_table_name = "age_modifiers"
 
 # create dict with columns for rides' attributes
 def create_rides_columns():
@@ -53,14 +53,14 @@ def table_for_EIN_ratings(rowid):
     return 'ein' + str(rowid)
 
 # old table data
-def create_table_data_old():
-    table_data = dict()
-    table_data[ride_table_name] = create_rides_columns()
-    table_data[age_table_name] = create_age_columns()
-    for i in range(1,80):
-        table_name = table_for_EIN_ratings(i)
-        table_data[table_name] = create_EIN_columns()
-    return table_data
+# def create_table_data_old():
+#     table_data = dict()
+#     table_data[ride_table_name] = create_rides_columns()
+#     table_data[age_table_name] = create_age_columns()
+#     for i in range(1,80):
+#         table_name = table_for_EIN_ratings(i)
+#         table_data[table_name] = create_EIN_columns()
+#     return table_data
 
 
 # get data
@@ -310,7 +310,7 @@ class DB(DB_general):
 
     def get_age_modifiers(self):
         age_modifiers = []
-        age_modifiers0 = self.select_all(age_table_name)
+        age_modifiers0 = self.select_all(DB.age_table_name)
         for age in age_modifiers0:
             age_modifier = {'from': age[1]}
             if age[2] is not None:
@@ -380,7 +380,7 @@ class DB(DB_general):
     def update_default_values(self, ride_name, new_default_EIN):
         rowid = self.get_ride_rowid(ride_name)
         EIN_columns = create_default_EIN_columns()
-        self.update_by_rowid(ride_table_name, EIN_columns, new_default_EIN, rowid)
+        self.update_by_rowid(DB.ride_table_name, EIN_columns, new_default_EIN, rowid)
 
     # calculate average EIN ratings
     def calculate_average_EIN(self, ride_name):
@@ -494,4 +494,4 @@ class DB(DB_general):
     # add a new ride to the ride table (probably useless fcn)
     def add_ride(self, ride_data):
         columns = DB.create_rides_columns().keys()
-        self.insert_data(ride_table_name, columns, ride_data)
+        self.insert_data(DB.ride_table_name, columns, ride_data)
