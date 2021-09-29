@@ -114,7 +114,10 @@ class DB_general:
         conn = self.connect()[0]
         with conn:
             command = insert_into_command(table_name, columns)
-            conn.execute(command, data)
+            try:
+                conn.execute(command, data)
+            except sqlite3.IntegrityError as error:
+                print('Unable to insert:', error)
         conn.close()
 
     def insert_and_create_table_if_needed(self, table_name, column_data, data):
