@@ -151,6 +151,7 @@ def get_ride_data_from_files(openrct_path):
     for folder in folders:
         curr_path = ride_path / folder / 'meta'
         # print(curr_path)
+        # get data from ride_name.h files
         files = curr_path.glob('*.h')
         for file in files:
             # print(file)
@@ -161,9 +162,10 @@ def get_ride_data_from_files(openrct_path):
     return rides
 
 
-# get two rides from a line of text
+# get two rides from a line of text "ride1,ride2,!"
 def rides_from_text(line_of_text):
     rides = line_of_text.split(',')
+    # ? or ! means ignore that line
     if '?' in rides[1]:
         return ('', '')
     if len(rides) > 2:
@@ -177,7 +179,7 @@ def capitalize_first_letters(text):
     text = text[0].upper() + text[1:]
     l = len(text)
     for i in range(1, l):
-        if text[i - 1] == ' ':
+        if text[i - 1] in ' -':
             try:
                 text = text[:i] + text[i].upper() + text[i + 1:]
             except IndexError:
@@ -415,7 +417,10 @@ class DB(DB_general):
 
     # add alias
     def add_alias(self, alias, og_ride):
-        pass
+        ride_info = self.find_ride_info(og_ride)
+        columns = create_alias_table_columns().keys()
+        alias_data = (capitalize_first_letters(alias), ride_info['ride_id'], ride_info['name'])
+        self.insert(DB.alias_table_name, columns, alias_data)
 
     # import EIN ratings for rides from old style db
     def import_ratings_from_old_db(self, old_db):
