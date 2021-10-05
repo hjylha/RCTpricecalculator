@@ -299,6 +299,7 @@ class MainScreen(BoxLayout):
     def clear_button_pressed(self, widget):
         self.inputsection.clear_input_boxes()
         self.pricetable.clear_pricetable()
+        self.inputsection.ride_name_box.focus = True
 
     # get excitement, intensity and nausea values from textinputs
     def get_EIN_values(self):
@@ -355,7 +356,7 @@ class MainScreen(BoxLayout):
         # buttons to clear inputs, and save ratings from input to database
         buttons = BoxLayout(size_hint=(0.6, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         # self.clear_button = Button(text='Clear', on_press=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        buttons.add_widget(Button(text='Clear', on_press=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
+        buttons.add_widget(Button(text='Clear', on_release=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         # self.calculate_button = Button(text='Calculate', on_press=self.calculate_price, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         buttons.add_widget(Button(text='Calculate and Save', on_press=self.calculate_and_save, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         self.add_widget(buttons)
