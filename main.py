@@ -1,5 +1,6 @@
 
 from kivy.app import App
+from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
@@ -23,7 +24,26 @@ class DescriptionText(BoxLayout):
     pass
 
 
-class RideTextBox(TextInput):
+class TextInputMod(TextInput):
+
+    # select all text when TextInput is clicked (and not in focus)
+    # TODO: something goes wrong with dropdown
+    def on_touch_down(self, touch):
+        # print('self position:', self.pos)
+        # print('self size:', self.size)
+        # print('touch position:', touch.pos)
+        correct_x_pos = self.pos[0] <= touch.pos[0] <= self.pos[0] + self.size[0]
+        correct_y_pos = self.pos[1] <= touch.pos[1] <= self.pos[1] + self.size[1]
+        if correct_x_pos and correct_y_pos:
+            if not self.focus:
+                super().on_touch_down(touch)
+                self.select_all()
+                self.focus = True
+                return True
+        return super().on_touch_down(touch)
+
+
+class RideTextBox(TextInputMod):
 
     def is_name_ok(self):
         ride_name = self.text.lower()
@@ -174,20 +194,20 @@ class InputSection(GridLayout):
 
         e_label = Label(text='Excitement Rating')
         self.add_widget(e_label)
-        self.excitement_value_box = TextInput(text='', multiline=False, write_tab=False)
+        self.excitement_value_box = TextInputMod(text='', multiline=False, write_tab=False)
         self.add_widget(self.excitement_value_box)
         # if, ER textinput is active, close ride name suggestion dropdown
         self.excitement_value_box.bind(focus=self.when_textinput_in_focus)
         
         i_label = Label(text='Intensity Rating')
         self.add_widget(i_label)
-        self.intensity_value_box = TextInput(text='', multiline=False, write_tab=False)
+        self.intensity_value_box = TextInputMod(text='', multiline=False, write_tab=False)
         self.add_widget(self.intensity_value_box)
         self.intensity_value_box.bind(focus=self.when_textinput_in_focus)
 
         n_label = Label(text='Nausea Rating')
         self.add_widget(n_label)
-        self.nausea_value_box = TextInput(text='', multiline=False, write_tab=False)
+        self.nausea_value_box = TextInputMod(text='', multiline=False, write_tab=False)
         self.add_widget(self.nausea_value_box)
         self.nausea_value_box.bind(focus=self.when_textinput_in_focus)
 
@@ -375,6 +395,9 @@ class MainScreen(BoxLayout):
         # set focus to ride name box
         self.inputsection.ride_name_box.focus = True
 
+        # keyboard shortcuts incoming
+        Window.bind(on_key_down=self._on_keyboard_down)
+
     def change_pay_for_entry(self, widget, state):
         if widget.state == 'normal':
             widget.text = 'No'
@@ -384,6 +407,21 @@ class MainScreen(BoxLayout):
             self.inputsection.free_entry_value = False
         self.calculate_price(widget)
     
+    def _on_keyboard_down(self, keyboard, keycode, some_number, text, modifiers):
+        # print('Keyboard is', keyboard)
+        # print('The keycode:', keycode)
+        # print('Some other number is', some_number)
+        # print('Text is', text)
+        # print('Modifiers are', modifiers)
+
+        # if F2 is pressed, clear
+        if keycode == 283:
+            # print('clear pressed')
+            self.clear_button_pressed(None)
+        # backspace, tab, and arrow keys need to do their thing
+        if keycode in [8, 9, 273, 274, 275, 276]:
+            return False
+        return True
 
 
 class MainWidget(Widget):
