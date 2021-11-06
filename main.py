@@ -356,6 +356,8 @@ class MainScreen(BoxLayout):
         EIN_multipliers = MainScreen.dbf.get_EIN_values_for_ride(ride_name)
         max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
         self.pricetable.write_pricetable(max_prices)
+        self.inputsection.ride_name_box.focus = True
+        self.inputsection.ride_name_box.select_all()
 
     def ride_name_box_focus(self, widget, value):
         if value:
@@ -376,9 +378,9 @@ class MainScreen(BoxLayout):
         # buttons to clear inputs, and save ratings from input to database
         buttons = BoxLayout(size_hint=(0.6, 0.2), pos_hint={'center_x': 0.5, 'center_y': 0.5})
         # self.clear_button = Button(text='Clear', on_press=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        buttons.add_widget(Button(text='Clear', on_release=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
+        buttons.add_widget(Button(text='Clear (F2)', on_release=self.clear_button_pressed, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         # self.calculate_button = Button(text='Calculate', on_press=self.calculate_price, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5})
-        buttons.add_widget(Button(text='Calculate and Save', on_press=self.calculate_and_save, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
+        buttons.add_widget(Button(text='Calculate and Save (F5)', on_press=self.calculate_and_save, size_hint=(0.1, 0.8), pos_hint={'center_x': 0.5, 'center_y': 0.5}))
         self.add_widget(buttons)
 
         # table to show the prices
@@ -398,13 +400,23 @@ class MainScreen(BoxLayout):
         # keyboard shortcuts incoming
         Window.bind(on_key_down=self._on_keyboard_down)
 
-    def change_pay_for_entry(self, widget, state):
-        if widget.state == 'normal':
-            widget.text = 'No'
-            self.inputsection.free_entry_value = True
+    def change_pay_for_entry(self, widget, state, change_state=False):
+        if change_state:
+            if widget.state == 'normal':
+                widget.state = 'down'
+                widget.text = 'Yes'
+                self.inputsection.free_entry_value = False
+            else:
+                widget.state = 'normal'
+                widget.text = 'No'
+                self.inputsection.free_entry_value = True
         else:
-            widget.text = 'Yes'
-            self.inputsection.free_entry_value = False
+            if widget.state == 'normal':
+                widget.text = 'No'
+                self.inputsection.free_entry_value = True
+            else:
+                widget.text = 'Yes'
+                self.inputsection.free_entry_value = False
         self.calculate_price(widget)
     
     def _on_keyboard_down(self, keyboard, keycode, some_number, text, modifiers):
@@ -418,8 +430,18 @@ class MainScreen(BoxLayout):
         if keycode == 283:
             # print('clear pressed')
             self.clear_button_pressed(None)
-        # backspace, tab, and arrow keys need to do their thing
-        if keycode in [8, 9, 273, 274, 275, 276]:
+        # if F5 is pressed, save values
+        elif keycode == 286:
+            self.calculate_and_save(None)
+            # print('F5 should save, but someone has made comments...')
+        # CTRL+E changes pay-for-entry setting
+        elif keycode == 101 and 'ctrl' in modifiers:
+            # print('changing pay-for-entry')
+            # btn = self.inputsection.pay_for_entry_btn
+            # print(btn.state)
+            self.change_pay_for_entry(self.inputsection.pay_for_entry_btn, None, True)
+        # backspace, tab, esc, and arrow keys need to do their thing
+        elif keycode in [8, 9, 27, 273, 274, 275, 276]:
             return False
         return True
 
