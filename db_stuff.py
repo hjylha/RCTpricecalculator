@@ -1,4 +1,5 @@
 import sqlite3
+from db_ini import get_columns_for_table
 
 # a very not safe way to create SQL commands
 # CREATE TABLE table_name (column type etc, column type);
@@ -74,13 +75,82 @@ def select_column_command(table_name, columns):
 
 # database class
 class DB_general:
+    # db should have a table of tables
+    master_table_name = 'tables'
+    master_table_columns = get_columns_for_table(master_table_name, False)
+    master_table_columns_dict = get_columns_for_table(master_table_name)
+    # master_table_col_name = [col for col in master_table_columns if 'UNIQUE' in master_table_columns[col]][0]
+    
+    # how to read column data from master table
+    @staticmethod
+    def string_to_column_data(col_data_as_string):
+        column_data = dict()
+        text = col_data_as_string
+        while text != '':
+            # find the first instance of (,())
+            bracket_count = 0
+            index = len(text)
+            for i, char in enumerate(text):
+                if char == '(':
+                    bracket_count += 1
+                elif char == ')':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        index = i
+                        break
+            item_as_str = text[:index + 1]
+            # get column name and data
+            name_and_data = item_as_str.split('(')
+            name = name_and_data[1].strip(', ')
+            data = name_and_data[2].split(',')
+            data = tuple(item.strip(")' ") for item in data)
+            column_data[name] = data
+            # make sure text starts with (
+            try:
+                text = text[index+1:].strip(', ')
+            except IndexError:
+                text = ''
+        return column_data
+
+    # how to store column data in master table
+    @staticmethod
+    def column_data_as_string(column_data):
+        text = ''
+        first = True
+        for column in column_data:
+            if first:
+                first = False
+            else:
+                text += ', '
+            text += '(' + column + ', ' + str(column_data[column]) + ')'
+        return text
+
+    # just to make sure columns and data line up
+    @staticmethod
+    def prepare_to_add_to_master_table(table_name, column_dict):
+        columns = ('table_name', 'column_data')
+        data = (table_name, DB_general.column_data_as_string(column_dict))
+        return (columns, data)
+
+    # get info on all the tables in the database
+    def get_table_data(self):
+        raw_table_data = self.select_columns(DB_general.master_table_name, [col[0] for col in DB_general.master_table_columns])
+        table_data = None
+        if raw_table_data is not None:
+            table_data = dict()
+            for line in raw_table_data:
+                table_data[line[0]] = DB_general.string_to_column_data(line[1])
+        return table_data
+    
     # initialize just by giving the location of the database, and maybe table_data as a dict
-    def __init__(self, filepath_of_db, table_data=None) -> None:
+    def __init__(self, filepath_of_db) -> None:
         self.filepath = filepath_of_db
-        if table_data is not None:
-            self.tables = table_data
-        else:
-            self.tables = dict()
+        self.tables = self.get_table_data()
+        # make sure master table exists
+        if self.tables is None:
+            self.create_table(DB_general.master_table_name, DB_general.master_table_columns_dict)
+            self.tables = {DB_general.master_table_name: DB_general.master_table_columns_dict}
+        
 
     # connect to database
     def connect(self):
@@ -93,15 +163,34 @@ class DB_general:
     def create_table(self, table_name, column_data):
         if column_data is None:
             return
-        conn = self.connect()[0]
-        with conn:
-            command = create_table_command(table_name, column_data)
-            try:
-                conn.execute(command)
-            except sqlite3.OperationalError:
-                # I guess there could be other errors, but...
-                print('Table', table_name, 'already exists')
-        conn.close()
+        # check if table already exists
+        check_name = self.select_rows_by_column_value(DB_general.master_table_name, DB_general.master_table_columns[0], table_name)
+        if check_name is None or check_name == []:
+            success = True
+            conn = self.connect()[0]
+            with conn:
+                command = create_table_command(table_name, column_data)
+                try:
+                    conn.execute(command)
+                except sqlite3.OperationalError:
+                    # I guess there could be other errors, but...
+                    success = False
+                    print('Table', table_name, 'already exists, but its not in', DB_general.master_table_name)
+                if check_name is None:
+                    command = create_table_command(DB_general.master_table_name, DB_general.master_table_columns)
+                    try:
+                        conn.execute(command)
+                    except sqlite3.OperationalError:
+                        # table does not exist by check_name, but somehow we got an error
+                        print('problems with', DB_general.master_table_name)
+            conn.close()
+            if success:
+                columns_and_data = DB_general.prepare_to_add_to_master_table(table_name, self.tables[table_name])
+                self.insert(DB_general.master_table_name, *columns_and_data)
+                print('Table', table_name, 'created')
+        else:
+            print('Table', table_name, 'already exists')
+            print(check_name[0], 'should be the same as', table_name)
         # self.tables[table_name] = column_data
     
     # create all the tables according to self.tables
@@ -174,8 +263,12 @@ class DB_general:
         conn, cur = self.connect()
         with conn:
             command = 'SELECT rowid, * FROM ' + table_name + ' WHERE ' + column + ' = ?;'
-            cur.execute(command, (value,))
-            rows = cur.fetchall()
+            try:
+                cur.execute(command, (value,))
+                rows = cur.fetchall()
+            except sqlite3.OperationalError:
+                # presumably table does not exist
+                rows = None
         return rows
 
     def select_rows_by_text_wo_capitalization(self, table_name, column, text):
