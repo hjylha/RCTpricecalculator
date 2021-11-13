@@ -161,8 +161,50 @@ def get_ride_data_from_files(openrct_path):
             rides[ride_name] = ride_data
     return rides
 
+# get age modifiers from line
+def get_age_modifiers_from_line(line):
+    values0 = line.split('}')[0].split('{')[1].split(',')
+    return tuple([int(value.strip()) for value in values0])
 
-# get two rides from a line of text "ride1,ride2,!"
+# get age modifiers from a file
+# static const row ageTableNew[] = {
+# };
+# static const row ageTableOld[] = {
+# };
+def get_age_table(file):
+    reading, new_table_done = False, False
+    new_table = []
+    old_table = []
+    for line in file:
+        if reading:
+            if '};' in line:
+                reading = False
+                if new_table_done:
+                    break
+                else:
+                    new_table_done = True
+            else:
+                if new_table_done:
+                    old_table.append(get_age_modifiers_from_line(line))
+                else:
+                    new_table.append(get_age_modifiers_from_line(line))
+        else:
+            if 'ageTableNew[]' in line:
+                reading = True
+            elif 'ageTableOld[]' in line:
+                reading = True
+    return {'new': new_table, 'old': old_table}
+
+# get age modifiers from RideRatings.cpp
+def get_age_modifiers_from_file(openrct_path):
+    # age_modifiers = dict()
+    file_path = openrct_path / 'src' / 'openrct2' / 'ride' / 'RideRatings.cpp'
+    with open(file_path, 'r') as f:
+        age_modifiers = get_age_table(f)
+        # age_modifiers['old'] = get_age_table(f, False)
+    return age_modifiers
+
+# get two rides from a line of text "ride1,ride2,_"
 def rides_from_text(line_of_text):
     rides = line_of_text.split(',')
     # ? or ! means ignore that line
@@ -211,8 +253,8 @@ def check_missing_for_alias(ride_list):
 class DB(DB_general):
     db_filename = 'rct_data.db'
     backup_db_filename = 'rct_data_backup.db'
-    ride_table_name = "rides"
-    age_table_name = "age_modifiers"
+    ride_table_name = 'rides'
+    age_table_name = 'age_modifiers'
     alias_table_name = 'aliases'
 
     @staticmethod
@@ -254,13 +296,18 @@ class DB(DB_general):
         table_data[DB.alias_table_name] = create_alias_table_columns()
         return table_data
 
-    def __init__(self, filepath_of_db, w_full_table_data=False) -> None:
-        super().__init__(filepath_of_db, table_data=DB.create_table_data())
-        if w_full_table_data:
-            ride_names0 = self.select_columns(DB.ride_table_name, ('name',))
-            ride_names = [DB.table_name_for_EIN_ratings(ride[0]) for ride in ride_names0]
-            for ride in ride_names:
-                self.tables[ride] = create_EIN_columns()
+    # def __init__(self, filepath_of_db) -> None:
+    #     super().__init__(filepath_of_db)
+    #     if w_full_table_data:
+    #         ride_names0 = self.select_columns(DB.ride_table_name, ('name',))
+    #         ride_names = [DB.table_name_for_EIN_ratings(ride[0]) for ride in ride_names0]
+    #         for ride in ride_names:
+    #             self.tables[ride] = create_EIN_columns()
+    #         # add more tables to master table
+    #         for table in self.tables:
+    #             columns_and_data = DB.prepare_to_add_to_master_table(table, self.tables[table])
+    #             self.insert(DB.master_table_name, *columns_and_data)
+        
 
     def create_table_for_ride_ratings(self, ride_name):
         table_name = DB.table_name_for_EIN_ratings(ride_name)
