@@ -7,8 +7,8 @@ from pathlib import Path
 
 ini_file = Path(__file__).resolve().parent / 'db.ini'
 
-# get possible db paths: under [filepath]
-def get_db_path():
+# get possible db paths: under [filepath] (by default only get existing file names)
+def get_db_path(existing=True):
     paths = []
     with open(ini_file, 'r') as f:
         reading = False
@@ -23,13 +23,14 @@ def get_db_path():
                 # otherwise add to possible paths
                 path = Path(line.strip())
                 # use absolute paths just in case
-                if path.is_absolute():
+                if not path.is_absolute():
+                    path = Path(__file__).resolve().parent.joinpath(path)
+                if (existing and path.exists()) or not existing:
                     paths.append(path)
-                else:
-                    paths.append(Path(__file__).resolve().parent.joinpath(path))
             # start reading when [filepath] is reached
             elif '[filepath]' in line:
                 reading = True
+    # print(paths)
     return paths
 
 # get columns for table (as a dict or a tuple)
