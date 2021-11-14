@@ -1,7 +1,11 @@
 from pathlib import Path
 '''read the file db.ini and extract the info there'''
 
-ini_file = Path('db.ini')
+# print(Path(__file__).resolve().parent)
+# path = Path('data/nothing_here.txt')
+# print(Path(__file__).resolve().parent.joinpath(path))
+
+ini_file = Path(__file__).resolve().parent / 'db.ini'
 
 # get possible db paths: under [filepath]
 def get_db_path():
@@ -9,15 +13,20 @@ def get_db_path():
     with open(ini_file, 'r') as f:
         reading = False
         for line in f:
-            # pass empty lines
-            if line.strip() == '':
+            # pass empty lines and lines containing #
+            if line.strip() == '' or '#' in line:
                 pass
             elif reading:
                 # if another [ in line, filepath section has ended
                 if '[' in line:
                     break
                 # otherwise add to possible paths
-                paths.append(Path(line.strip()))
+                path = Path(line.strip())
+                # use absolute paths just in case
+                if path.is_absolute():
+                    paths.append(path)
+                else:
+                    paths.append(Path(__file__).resolve().parent.joinpath(path))
             # start reading when [filepath] is reached
             elif '[filepath]' in line:
                 reading = True
@@ -32,8 +41,8 @@ def get_columns_for_table(table_name, as_dict=True):
     with open(ini_file, 'r') as f:
         reading = False
         for line in f:
-            # pass empty lines
-            if line.strip() == '':
+            # pass empty lines and lines containing #
+            if line.strip() == '' or '#' in line:
                 pass
             # column_name=(type,stuff1,stuff2)
             elif reading:
