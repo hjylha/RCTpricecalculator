@@ -1,11 +1,162 @@
-"""script to read ride values and age modifiers from downloaded file"""
+from pathlib import Path
 
-# source = "C:\Pelit\Useful ride info RCT2.csv"
-def read_ride_values(filepath="C:\\Pelit\\Useful ride info RCT2.csv"):
+'''functions to get ride values and age modifiers from openrct2 source'''
+openrct2_path = Path('C:\\Ohjelmointiprojekteja\\c++projects\\OpenRCT2')
+
+# get data
+# from openRCT2 source
+# ..\OpenRCT2\src\openrct2\ride
+# ride data
+# subfolders with .h files:
+# coaster\meta
+# gentle\meta
+# shops\meta   (probably not needed)
+# thrill\meta
+# transport\meta
+# water\meta
+# in files RideName.h:
+# EIN multipliers:
+# SET_FIELD(RatingsMultipliers, { 48, 28, 7 }),
+# RideBonusValue:
+# SET_FIELD(BonusValue, 65),
+
+# age modifiers:
+# RideRatings.cpp
+# static const row ageTableNew[] = {
+# };
+# static const row ageTableOld[] = {
+# };
+
+# get ratings multipliers from a line of text, if they are there
+def get_ratings_multipliers(line_of_text):
+    if 'RatingsMultipliers' in line_of_text:
+        numbers = '1234567890'
+        start_index = None
+        for i, char in enumerate(line_of_text):
+            if char in numbers:
+                if start_index is None:
+                    start_index = i
+                end_index = i
+        EIN = line_of_text[start_index:end_index + 1].split(',')
+        for i, value in enumerate(EIN):
+            EIN[i] = int(value.strip())
+        return tuple(EIN)
+    return None
+
+# get bonusvalue of a ride from a line of text, if it is there
+def get_rides_bonusvalue(line_of_text):
+    if 'BonusValue' in line_of_text:
+        numbers = '1234567890'
+        start_index = None
+        for i, char in enumerate(line_of_text):
+            if char in numbers:
+                if start_index is None:
+                    start_index = i
+                end_index = i
+        return int(line_of_text[start_index:end_index+1])
+    return None
+
+# get ratings modifiers and bonusvalue from file
+def get_ride_data_from_file(file):
+    EIN, bonusvalue = None, None
+    for line in file:
+        if EIN is None:
+            EIN = get_ratings_multipliers(line)
+        if bonusvalue is None:
+            bonusvalue = get_rides_bonusvalue(line)
+        if EIN is not None and bonusvalue is not None:
+            return (EIN, bonusvalue)
+
+# changing AirPoweredVerticalCoaster into Air Powered Vertical Coaster
+def add_spaces_to_ride_names(ride_wo_spaces):
+    ride_name = ride_wo_spaces
+    i = 1
+    while True:
+        try:
+            char, char_next = ride_name[i], ride_name[i + 1]
+            if char.isupper() and char_next.islower():
+                ride_name = ride_name[:i] + ' ' + ride_name[i:]
+                i += 1
+            i += 1
+        except IndexError:
+            return ride_name
+
+# get EIN modifiers and bonusvalue for all rides with files (except shops)
+def get_ride_data_from_files(openrct_path=openrct2_path):
+    rides = dict()
+    # ..\OpenRCT2\src\openrct2\ride
+    ride_path = openrct_path / 'src' / 'openrct2' / 'ride'
+    # skip 'shops' folder for now
+    folders = ['coaster', 'gentle', 'thrill', 'transport', 'water']
+    for folder in folders:
+        curr_path = ride_path / folder / 'meta'
+        # print(curr_path)
+        # get data from ride_name.h files
+        files = curr_path.glob('*.h')
+        for file in files:
+            # print(file)
+            ride_name = add_spaces_to_ride_names(file.stem)
+            with open(file) as f:
+                ride_data = get_ride_data_from_file(f)
+            rides[ride_name] = ride_data
+    return rides
+
+# get age modifiers from line
+def get_age_modifiers_from_line(line):
+    values0 = line.split('}')[0].split('{')[1].split(',')
+    return tuple([int(value.strip()) for value in values0])
+
+# get age modifiers from a file
+# static const row ageTableNew[] = {
+# };
+# static const row ageTableOld[] = {
+# };
+def get_age_table(file):
+    reading, new_table_done = False, False
+    new_table = []
+    old_table = []
+    for line in file:
+        if reading:
+            if '};' in line:
+                reading = False
+                if new_table_done:
+                    break
+                else:
+                    new_table_done = True
+            else:
+                if new_table_done:
+                    old_table.append(get_age_modifiers_from_line(line))
+                else:
+                    new_table.append(get_age_modifiers_from_line(line))
+        else:
+            if 'ageTableNew[]' in line:
+                reading = True
+            elif 'ageTableOld[]' in line:
+                reading = True
+    return {'new': new_table, 'old': old_table}
+
+# get age modifiers from RideRatings.cpp
+def get_age_modifiers_from_file(openrct_path=openrct2_path):
+    # age_modifiers = dict()
+    file_path = openrct_path / 'src' / 'openrct2' / 'ride' / 'RideRatings.cpp'
+    with open(file_path, 'r') as f:
+        age_modifiers = get_age_table(f)
+        # age_modifiers['old'] = get_age_table(f, False)
+    return age_modifiers
+
+
+'''functions to get aliases from a file'''
+# TODO
+
+
+'''script to read ride values and age modifiers from downloaded file'''
+
+# source = 'C:\Pelit\Useful ride info RCT2.csv'
+def read_ride_values(filepath='C:\\Pelit\\Useful ride info RCT2.csv'):
     data = []
-    with open(filepath, "r") as file:
+    with open(filepath, 'r') as file:
         for line in file:
-            list_of_things = line.split(",")
+            list_of_things = line.split(',')
             try:
                 int(list_of_things[1])
                 item = dict()
@@ -19,49 +170,49 @@ def read_ride_values(filepath="C:\\Pelit\\Useful ride info RCT2.csv"):
                 pass
     return data
 
-def write_ride_values_to_file(ride_values, filepath="ride_values.csv"):
-    with open(filepath, "w") as file:
+def write_ride_values_to_file(ride_values, filepath='ride_values.csv'):
+    with open(filepath, 'w') as file:
         for ride in ride_values:
             line0 = (str(ride['ride type']), 
                 str(ride['excitementValue']),
                 str(ride['intensityValue']),
                 str(ride['nauseaValue']),
                 str(ride['rideBonusValue']))
-            line = ','.join(line0) + ";\n"
+            line = ','.join(line0) + ';\n'
             file.write(line)
 
-def read_age_values(in_classic=False, filepath="C:\\Pelit\\Useful ride info RCT2.csv"):
+def read_age_values(in_classic=False, filepath='C:\\Pelit\\Useful ride info RCT2.csv'):
     data = []
-    with open(filepath, "r") as file:
+    with open(filepath, 'r') as file:
         index = None
         reading = False
         found = False
         for line in file:
-            list_of_things = line.split("\n")[0]
-            if "\n" in list_of_things:
-                print("onkelma")
-            list_of_things = line.split(",")
+            list_of_things = line.split('\n')[0]
+            if '\n' in list_of_things:
+                print('onkelma')
+            list_of_things = line.split(',')
             if reading and found:
-                if list_of_things[index] == "":
+                if list_of_things[index] == '':
                     reading = False
                 else:
                     try:
                         second = list_of_things[index + 1]
-                        if "+" in second:
-                            item = (list_of_things[index], int(second), "+")
+                        if '+' in second:
+                            item = (list_of_things[index], int(second), '+')
                             data.append(item)
                         else:
                             try:
                                 other_item = float(second)
-                                item = (list_of_things[index], other_item, "*")
+                                item = (list_of_things[index], other_item, '*')
                                 data.append(item)
                             except ValueError:
                                 pass
                     except IndexError:
-                        print("jokin on vialla indeksien kanssa")
+                        print('jokin on vialla indeksien kanssa')
             else:
                 for i, cell in enumerate(list_of_things):
-                    if "Age values" in cell and not found:
+                    if 'Age values' in cell and not found:
                         index = i
                         reading = True
                         if not in_classic:
@@ -71,16 +222,16 @@ def read_age_values(in_classic=False, filepath="C:\\Pelit\\Useful ride info RCT2
     return data
 
 def get_range(range_as_string):
-    items = range_as_string.split(" ")
+    items = range_as_string.split(' ')
     if len(items) > 1:
         try:
             return (int(items[0]), int(items[-1]))
         except ValueError:
             pass
     else:
-        if "+" in items[0]:
+        if '+' in items[0]:
             try:
-                return (int(items[0][:-1]), "")
+                return (int(items[0][:-1]), '')
             except ValueError:
                 pass
 
@@ -99,14 +250,14 @@ def clean_age_values(age_values):
 
 
 def write_age_values_to_file(age_values, in_classic=False):
-    filename0 = "age_modifiers"
+    filename0 = 'age_modifiers'
     if in_classic:
-        filename = filename0 + "_classic.csv"
+        filename = filename0 + '_classic.csv'
     else:
-        filename = filename0 + ".csv"
-    with open(filename, "w") as file:
+        filename = filename0 + '.csv'
+    with open(filename, 'w') as file:
         for info in age_values:
-            line = ",".join(info) + ";\n"
+            line = ','.join(info) + ';\n'
             file.write(line)
 
 # get ride and age values and write them to file
@@ -175,6 +326,6 @@ def read_age_values():
 
         
 
-
-if __name__ == "__main__":
-    main()
+# no need to do anything here
+# if __name__ == '__main__':
+#     main()
