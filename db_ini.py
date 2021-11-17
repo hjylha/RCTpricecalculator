@@ -5,6 +5,7 @@ from pathlib import Path
 # path = Path('data/nothing_here.txt')
 # print(Path(__file__).resolve().parent.joinpath(path))
 
+# this file (db_ini.py) and db.ini should be in the same directory
 ini_file = Path(__file__).resolve().parent / 'db.ini'
 
 # get possible db paths: under [filepath] (by default only get existing file names)
@@ -66,11 +67,19 @@ def get_columns_for_table(table_name, as_dict=True):
         columns = tuple(columns)
     return columns
 
-# get column info for given tables
-def get_columns_for_tables(tables):
-    table_data = dict()
+# get column info for given tables (as a dict or a tuple)
+def get_columns_for_tables(tables, as_dict=True):
+    if as_dict:
+        table_data = dict()
+    else:
+        table_data = []
     for table in tables:
-        table_data[table] = get_columns_for_table(table)
+        if as_dict:
+            table_data[table] = get_columns_for_table(table)
+        else:
+            table_data.append((table, get_columns_for_table(table, False)))
+    if not as_dict:
+        table_data = tuple(table_data)
     return table_data
 
 # get everything
