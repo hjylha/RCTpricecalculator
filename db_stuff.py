@@ -1,37 +1,32 @@
 import sqlite3
-from db_ini import get_columns_for_table
+from db_ini import get_column_names_for_table, get_columns_for_table
 
 # a very not safe way to create SQL commands
 # CREATE TABLE table_name (column type etc, column type);
 def create_table_command(table_name, column_data):
-    command = 'CREATE TABLE '
-    command += table_name
-    command += ' ( '
+    command = f'CREATE TABLE {table_name} ( '
     first = True
     for key, value in column_data.items():
         if not first:
             command += ', '
         else:
             first = False
-        command += key + ' '
-        # command += ' '
+        command += f'{key} '
         for thing in value:
-            command += thing + ' '
+            command += f'{thing} '
     command += ');'
     return command
 
 # INSERT INTO table_name (column1, column2, ...) VALUES (? , ?, ...);
 def insert_into_command(table_name, columns):
-    command = 'INSERT INTO '
-    command += table_name
-    command += ' ('
+    command = f'INSERT INTO {table_name} ('
     first = True
     for column in columns:
         if not first:
             command += ', '
         else:
             first= False
-        command += column + ' '
+        command += f'{column} '
     command += ') VALUES ('
     first = True
     for _ in columns:
@@ -39,21 +34,20 @@ def insert_into_command(table_name, columns):
             command += ', '
         else:
             first = False
-        # command += str(value) + ' '
         command += '? '
     command += ');'
     return command
 
 # UPDATE table_name SET columns[0] = ?, columns[1] = ?, ... WHERE rowid = rowid;
 def update_command_w_rowid(table_name, columns):
-    command = 'UPDATE ' + table_name + ' SET '
+    command = f'UPDATE {table_name} SET '
     first = True
     for column in columns:
         if not first:
             command += ', '
         else:
             first = False
-        command += column + ' = ? '
+        command += f'{column} = ? '
     command += ' WHERE rowid = ?;'
     return command
 
@@ -69,7 +63,7 @@ def select_column_command(table_name, columns):
         command += column
         if first:
             first = False
-    command += ' FROM ' + table_name + ';'
+    command += f' FROM {table_name};'
     return command
 
 
@@ -78,6 +72,7 @@ class DB_general:
     # db should have a table of tables
     master_table_name = 'tables'
     master_table_columns = get_columns_for_table(master_table_name, False)
+    master_table_column_names = get_column_names_for_table(master_table_name)
     master_table_columns_dict = get_columns_for_table(master_table_name)
     # master_table_col_name = [col for col in master_table_columns if 'UNIQUE' in master_table_columns[col]][0]
     
@@ -114,20 +109,20 @@ class DB_general:
 
     # how to store column data in master table
     @staticmethod
-    def column_data_as_string(column_data):
+    def column_data_as_string(column_data: dict) -> str:
         text = ''
         first = True
-        for column in column_data:
+        for column, value in column_data.items():
             if first:
                 first = False
             else:
                 text += ', '
-            text += '(' + column + ', ' + str(column_data[column]) + ')'
+            text += f'({column}, {str(value)})'
         return text
 
     # just to make sure columns and data line up
     @staticmethod
-    def prepare_to_add_to_master_table(table_name, column_dict):
+    def prepare_to_add_to_master_table(table_name: str, column_dict: dict) -> tuple:
         columns = ('table_name', 'column_data')
         data = (table_name, DB_general.column_data_as_string(column_dict))
         return (columns, data)
@@ -148,8 +143,9 @@ class DB_general:
         self.tables = self.get_table_data()
         # make sure master table exists
         if self.tables is None:
+            self.tables = dict()
             self.create_table(DB_general.master_table_name, DB_general.master_table_columns_dict)
-            self.tables = {DB_general.master_table_name: DB_general.master_table_columns_dict}
+            # self.tables = {DB_general.master_table_name: DB_general.master_table_columns_dict}
         
 
     # connect to database
@@ -164,7 +160,8 @@ class DB_general:
         if column_data is None:
             return
         # check if table already exists
-        check_name = self.select_rows_by_column_value(DB_general.master_table_name, DB_general.master_table_columns[0], table_name)
+        check_name = self.select_rows_by_column_value(DB_general.master_table_name, DB_general.master_table_column_names[0], table_name)
+        # print(f'chack_name is {check_name}')
         if check_name is None or check_name == []:
             success = True
             conn = self.connect()[0]
@@ -172,12 +169,14 @@ class DB_general:
                 command = create_table_command(table_name, column_data)
                 try:
                     conn.execute(command)
+                    self.tables[table_name] = column_data
+                    print('Table', table_name, 'created')
                 except sqlite3.OperationalError:
                     # I guess there could be other errors, but...
                     success = False
                     print('Table', table_name, 'already exists, but its not in', DB_general.master_table_name)
                 if check_name is None:
-                    command = create_table_command(DB_general.master_table_name, DB_general.master_table_columns)
+                    command = create_table_command(DB_general.master_table_name, DB_general.master_table_columns_dict)
                     try:
                         conn.execute(command)
                     except sqlite3.OperationalError:
@@ -185,9 +184,9 @@ class DB_general:
                         print('problems with', DB_general.master_table_name)
             conn.close()
             if success:
-                columns_and_data = DB_general.prepare_to_add_to_master_table(table_name, self.tables[table_name])
+                columns_and_data = DB_general.prepare_to_add_to_master_table(table_name, column_data)
                 self.insert(DB_general.master_table_name, *columns_and_data)
-                print('Table', table_name, 'created')
+                
         else:
             print('Table', table_name, 'already exists')
             print(check_name[0], 'should be the same as', table_name)
@@ -244,7 +243,7 @@ class DB_general:
         conn, cur = self.connect()
         with conn:
             try:
-                cur.execute('SELECT rowid, * FROM ' + table_name)
+                cur.execute(f'SELECT rowid, * FROM {table_name}')
                 all_things = cur.fetchall()
             except sqlite3.OperationalError:
                 # table_name not found, presumably
@@ -262,7 +261,8 @@ class DB_general:
     def select_rows_by_column_value(self, table_name, column, value):
         conn, cur = self.connect()
         with conn:
-            command = 'SELECT rowid, * FROM ' + table_name + ' WHERE ' + column + ' = ?;'
+            command = f'SELECT rowid, * FROM {table_name} WHERE {column} = ?;'
+            # command = 'SELECT rowid, * FROM ' + table_name + ' WHERE ' + column + ' = ?;'
             try:
                 cur.execute(command, (value,))
                 rows = cur.fetchall()
@@ -274,7 +274,8 @@ class DB_general:
     def select_rows_by_text_wo_capitalization(self, table_name, column, text):
         conn, cur = self.connect()
         with conn:
-            command = 'SELECT rowid, * FROM ' + table_name + ' WHERE ' + column + ' LIKE ?;'
+            command = f'SELECT rowid, * FROM {table_name} WHERE {column} LIKE ?;'
+            # command = 'SELECT rowid, * FROM ' + table_name + ' WHERE ' + column + ' LIKE ?;'
             cur.execute(command, (text,))
             rows = cur.fetchall()
         return rows
@@ -286,12 +287,13 @@ class DB_general:
 
     # backup db to another file
     def backup_db(self, new_filename):
-        backup_db = DB_general(new_filename, self.tables)
-        everything = self.get_everything()
-        backup_db.create_tables()
-        for table in everything:
-            if everything[table] is not None:
-                for item in everything[table]:
-                    # insert data, but ignore rowid
-                    backup_db.insert(table, self.tables[table].keys(), item[1:])
+        backup_db = DB_general(new_filename)
+        everything = self.get_table_data()
+        for table, col_data in everything.items():
+            if table != DB_general.master_table_name:
+                backup_db.create_table(table, col_data)
+                rows_in_table = self.select_columns(table, col_data.keys())
+                if rows_in_table is not None:
+                    for row in rows_in_table:
+                        backup_db.insert(table, col_data.keys(), row)
 
