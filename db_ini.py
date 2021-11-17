@@ -67,6 +67,11 @@ def get_columns_for_table(table_name, as_dict=True):
         columns = tuple(columns)
     return columns
 
+# get just the column names in a tuple in the order they are in db.ini
+def get_column_names_for_table(table_name):
+    return tuple(col[0] for col in get_columns_for_table(table_name, False))
+    
+
 # get column info for given tables (as a dict or a tuple)
 def get_columns_for_tables(tables, as_dict=True):
     if as_dict:
