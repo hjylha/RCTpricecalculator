@@ -174,6 +174,8 @@ class DB_general:
                 except sqlite3.OperationalError:
                     # I guess there could be other errors, but...
                     success = False
+                    print('this was the command that raised exception')
+                    print(command)
                     print('Table', table_name, 'already exists, but its not in', DB_general.master_table_name)
                 if check_name is None:
                     command = create_table_command(DB_general.master_table_name, DB_general.master_table_columns_dict)
