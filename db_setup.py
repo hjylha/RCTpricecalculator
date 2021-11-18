@@ -428,6 +428,14 @@ class DB(DB_general):
         self.set_average_values_as_default_for_all()
         print('averages set as default EIN values')
 
+    # create a csv file containing data in main tables
+    def write_main_tables_to_csv_file(self, filename):
+        main_tables =  [DB.ride_table_name, DB.alias_table_name, DB.age_table_name, DB.age_table_name_classic]
+        for table in main_tables:
+            with open(filename, 'a') as f:
+                f.write(f'\n[{table}]\n')
+            self.create_csv_file(table, filename)
+
     def print_stuff(self):
         rides = self.select_all(DB.ride_table_name)
         ages = self.select_all(DB.age_table_name)

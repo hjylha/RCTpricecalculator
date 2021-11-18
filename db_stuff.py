@@ -238,6 +238,7 @@ class DB_general:
             except sqlite3.OperationalError:
                 # presumably table or columns do not exist?
                 data = None
+        conn.close()
         return data
 
     # get everything from a table
@@ -250,6 +251,7 @@ class DB_general:
             except sqlite3.OperationalError:
                 # table_name not found, presumably
                 all_things = None
+        conn.close()
         return all_things
     
     # get everything in tables referenced in self.tables
@@ -271,6 +273,7 @@ class DB_general:
             except sqlite3.OperationalError:
                 # presumably table does not exist
                 rows = None
+        conn.close()
         return rows
 
     def select_rows_by_text_wo_capitalization(self, table_name, column, text):
@@ -280,6 +283,7 @@ class DB_general:
             # command = 'SELECT rowid, * FROM ' + table_name + ' WHERE ' + column + ' LIKE ?;'
             cur.execute(command, (text,))
             rows = cur.fetchall()
+        conn.close()
         return rows
     
     # get info on row with specific rowid
@@ -298,4 +302,21 @@ class DB_general:
                 if rows_in_table is not None:
                     for row in rows_in_table:
                         backup_db.insert(table, col_data.keys(), row)
+    
+    # create a csv file containing the data in a table
+    def create_csv_file(self, table_name, csv_filename, mode='a'):
+        # table_contents = []
+        # column_data = self.tables[table_name]
+        columns = list(self.tables[table_name].keys())
+        data = self.select_columns(table_name, columns)
+        if data:
+            data.insert(0, columns)
+        # make sure Nones are treated correcty
+        def stringify(text):
+            return '' if text is None else str(text)
+        
+        with open(csv_filename, mode) as file:
+            for line in data:
+                line = [stringify(item) for item in line]
+                file.write(f'{",".join(line)};\n')
 
