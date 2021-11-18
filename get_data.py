@@ -148,6 +148,52 @@ def get_age_modifiers_from_file(openrct_path=openrct2_path):
 '''functions to get aliases from a file'''
 # TODO
 
+# here is the old way
+
+# get two rides from a line of text "ride1,ride2,_"
+def rides_from_text(line_of_text):
+    rides = line_of_text.split(',')
+    # ? or ! means ignore that line
+    if '?' in rides[1]:
+        return ('', '')
+    if len(rides) > 2:
+        if '!' in rides[2] or '?' in rides[2]:
+            return ('', '')
+    return (rides[0].strip(), rides[1].strip())
+
+def capitalize_first_letters(text):
+    if text == '':
+        return text
+    text = text[0].upper() + text[1:]
+    l = len(text)
+    for i in range(1, l):
+        if text[i - 1] in ' -':
+            try:
+                text = text[:i] + text[i].upper() + text[i + 1:]
+            except IndexError:
+                text = text[:i] + text[i].upper()
+    return text
+
+def capitalize_list(list_of_lists):
+    new_list = []
+    for list_of_text in list_of_lists:
+        new_list.append(capitalize_first_letters(text) for text in list_of_text)
+    return new_list
+
+# check missing_rides.txt for aliases
+def check_missing_for_alias(ride_list):
+    aliases = []
+    ride_list_l = [ride.lower() for ride in ride_list]
+    with open('missing_rides.txt', 'r') as f:
+        for line in f:
+            ride1, ride2 = rides_from_text(line)
+            if ride1.lower() in ride_list_l:
+                aliases.append((ride1, ride2))
+            elif ride2.lower() in ride_list_l:
+                aliases.append((ride2, ride1))
+    # list of (og_ride, alias)
+    return capitalize_list(aliases)
+
 
 '''script to read ride values and age modifiers from downloaded file'''
 
