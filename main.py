@@ -118,7 +118,7 @@ class RideTextBox(TextInputMod):
         super().__init__(**kwargs)
 
         # self.ride_names = read_ride_values().keys()
-        dbf = DB(DB.db_filename)
+        dbf = DB()
         self.ride_names = dbf.get_ride_names()
         self.dropdown = DropDown()
         self.no_match_text = ms.no_match_text
@@ -146,7 +146,7 @@ class InputSection(GridLayout):
     def set_default_EIN_values(self, ride_name):
         # if ride_name not in self.ride_name_box.ride_names:
         #     return
-        dbf = DB(DB.db_filename)
+        dbf = DB()
         default_EIN = dbf.get_default_EIN_for_ride(ride_name)
         # None is not a good default value
         if default_EIN[0] is None or default_EIN[1] is None or default_EIN[2] is None:
@@ -264,8 +264,9 @@ class PriceTable(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # self.age_values = read_age_values()
-        dbf = DB(DB.db_filename)
-        self.age_values = dbf.get_age_modifiers()
+        dbf = DB()
+        # self.age_values = dbf.get_age_modifiers()
+        self.age_values = dbf.get_age_ranges()
         # 12 rows, 1? + 2 + 2 columns of boxlayouts
         self.table = [BoxLayout() for _ in range(36)]
         for i, layout in enumerate(self.table):
@@ -294,7 +295,7 @@ class PriceTable(GridLayout):
                     layout.add_widget(cell)
         self.labels[4].text = self.labels[6].text = 'unique'
         self.labels[5].text = self.labels[7].text = 'non-unique'
-        # place age ranges in the pricetable
+        # place age ranges in the pricetable (10=len(age_values)/2)
         for i, line in enumerate(self.age_values):
             self.labels[8 + 5*i].text = ms.format_age_ranges(line['from'], line['to'])
             # coloring the text by row seems not ideal
@@ -307,13 +308,13 @@ class PriceTable(GridLayout):
 
     def write_pricetable(self, max_prices):
         for i, priceline in enumerate(max_prices):
-            for j in range(4):
-                self.labels[9 + 5*i + j].text = ms.price_as_string(priceline[j])
-                self.labels[9 + 5*i + j].color = ms.price_color(priceline[j])
+            for j, price in enumerate(priceline):
+                self.labels[9 + 5*i + j].text = ms.price_as_string(price)
+                self.labels[9 + 5*i + j].color = ms.price_color(price)
 
 
 class MainScreen(BoxLayout):
-    dbf = DB(DB.db_filename)
+    dbf = DB()
     
     # if clear button is pressed, clear everything
     def clear_button_pressed(self, widget):
@@ -333,8 +334,9 @@ class MainScreen(BoxLayout):
             return
         ride_name = self.inputsection.ride_name_box.text
         EIN = self.get_EIN_values()
-        EIN_multipliers = MainScreen.dbf.get_EIN_values_for_ride(ride_name)
-        max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
+        max_prices = MainScreen.dbf.calculate_max_prices(ride_name, EIN, self.inputsection.free_entry_value)
+        # EIN_multipliers = MainScreen.dbf.get_EIN_values_for_ride(ride_name)
+        # max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
         # max_prices = calculate_max_prices(self.ride_values, self.age_values, ride_name, excitement, intensity, nausea, self.inputsection.free_entry_value)
         # show the prices in the pricetable
         self.pricetable.write_pricetable(max_prices)
@@ -353,8 +355,9 @@ class MainScreen(BoxLayout):
         # update default values
         MainScreen.dbf.set_average_values_as_default(ride_name)
         # calculate prices
-        EIN_multipliers = MainScreen.dbf.get_EIN_values_for_ride(ride_name)
-        max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
+        max_prices = MainScreen.dbf.calculate_max_prices(ride_name, EIN, self.inputsection.free_entry_value)
+        # EIN_multipliers = MainScreen.dbf.get_EIN_values_for_ride(ride_name)
+        # max_prices = calculate_price_table(EIN_multipliers, EIN, self.pricetable.age_values, self.inputsection.free_entry_value)
         self.pricetable.write_pricetable(max_prices)
         self.inputsection.ride_name_box.focus = True
         self.inputsection.ride_name_box.select_all()
