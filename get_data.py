@@ -28,7 +28,7 @@ openrct2_path = Path('C:\\Ohjelmointiprojekteja\\c++projects\\OpenRCT2')
 # };
 
 # get ratings multipliers from a line of text, if they are there
-def get_ratings_multipliers(line_of_text):
+def get_ratings_multipliers(line_of_text : str) -> tuple:
     if 'RatingsMultipliers' in line_of_text:
         numbers = '1234567890'
         start_index = None
@@ -44,7 +44,7 @@ def get_ratings_multipliers(line_of_text):
     return None
 
 # get bonusvalue of a ride from a line of text, if it is there
-def get_rides_bonusvalue(line_of_text):
+def get_rides_bonusvalue(line_of_text : str) -> int:
     if 'BonusValue' in line_of_text:
         numbers = '1234567890'
         start_index = None
@@ -68,7 +68,7 @@ def get_ride_data_from_file(file):
             return (EIN, bonusvalue)
 
 # changing AirPoweredVerticalCoaster into Air Powered Vertical Coaster
-def add_spaces_to_ride_names(ride_wo_spaces):
+def add_spaces_to_ride_names(ride_wo_spaces : str) -> str:
     ride_name = ride_wo_spaces
     i = 1
     while True:
@@ -102,7 +102,7 @@ def get_ride_data_from_files(openrct_path=openrct2_path):
     return rides
 
 # get age modifiers from line
-def get_age_modifiers_from_line(line):
+def get_age_modifiers_from_line(line : str) -> tuple:
     values0 = line.split('}')[0].split('{')[1].split(',')
     return tuple([int(value.strip()) for value in values0])
 
