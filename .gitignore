@@ -1,4 +1,13 @@
 /__pycache__
+/.pytest_cache
 /.vscode
-openrct_path.txt
-test*
+/tests/__pycache__
+/tests/.pytest_cache
+example*
+test.db
+test.py
+test2.py
+test3.py
+test4.py
+test5.py
+test6.py
