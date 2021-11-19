@@ -4,53 +4,25 @@ from db_ini import get_column_names_for_table, get_columns_for_table
 # a very not safe way to create SQL commands
 # CREATE TABLE table_name (column type etc, column type);
 def create_table_command(table_name, column_data):
-    command = f'CREATE TABLE {table_name} ( '
-    first = True
-    for key, value in column_data.items():
-        if not first:
-            command += ', '
-        else:
-            first = False
-        command += f'{key} '
-        for thing in value:
-            command += f'{thing} '
-    command += ');'
-    return command
+    columns_and_types = [f'{key} {" ".join(value)}' for key, value in column_data.items()]
+    return f'CREATE TABLE {table_name} ({", ".join(columns_and_types)});'
+
 
 # INSERT INTO table_name (column1, column2, ...) VALUES (? , ?, ...);
 def insert_into_command(table_name, columns):
-    command = f'INSERT INTO {table_name} ('
-    first = True
-    for column in columns:
-        if not first:
-            command += ', '
-        else:
-            first= False
-        command += f'{column} '
-    command += ') VALUES ('
-    first = True
-    for _ in columns:
-        if not first:
-            command += ', '
-        else:
-            first = False
-        command += '? '
-    command += ');'
-    return command
+    return f'INSERT INTO {table_name} ({", ".join(columns)}) VALUES ({", ".join(["?" for _ in columns])});'
 
-# UPDATE table_name SET columns[0] = ?, columns[1] = ?, ... WHERE rowid = rowid;
+
+# UPDATE table_name SET columns[0] = ?, columns[1] = ?, ... WHERE rowid = ?;
 def update_command_w_rowid(table_name, columns):
-    command = f'UPDATE {table_name} SET '
-    first = True
-    for column in columns:
-        if not first:
-            command += ', '
-        else:
-            first = False
-        command += f'{column} = ? '
-    command += ' WHERE rowid = ?;'
-    return command
+    equalities = [f'{column} = ?' for column in columns]
+    return f'UPDATE {table_name} SET {", ".join(equalities)} WHERE rowid = ?;'
 
+# UPDATE table_name SET columns[0] = ?, columns[1] = ?, ... WHERE columns2[0] = ?, columns2[1] = ? ...;
+def update_command_w_where(table_name, columns_to_update, columns_w_condition):
+    equalities1 = [f'{column} = ?' for column in columns_to_update]
+    equalities2 = [f'{column} = ?' for column in columns_w_condition]
+    return f'UPDATE {table_name} SET {", ".join(equalities1)} WHERE {", ".join(equalities2)};'
 
 # SELECT columns[0], columns[1], ... FROM table_name;
 def select_column_command(table_name, columns):
@@ -65,6 +37,11 @@ def select_column_command(table_name, columns):
             first = False
     command += f' FROM {table_name};'
     return command
+
+
+# SELECT columns1 FROM table_name WHERE columns[0] = ?, columns[1] = ?, ...;
+def select_columns_where_command(table_name, columns, columns_w_condition):
+    pass
 
 
 # database class
