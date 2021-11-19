@@ -1,82 +1,15 @@
+from statistics import mean
+import time
+
 from db_stuff import DB_general
 from db_ini import get_columns_for_table, get_db_path, get_column_names_for_table
 from get_data import get_age_modifiers_from_file, get_ride_data_from_files
 from get_data import check_missing_for_alias, capitalize_first_letters
 from calc import calc_max_prices
-# from get_data import read_age_values  # probably should get rid of this
-# from pathlib import Path
-from statistics import mean
-import time
-
-# db_filename = 'rct_data.db'
-# ride_table_name = "rides"
-# age_table_name = "age_modifiers"
-
-# create dict with columns for rides' attributes
-# def create_rides_columns():
-#     return {'name': ('TEXT', 'NOT NULL', 'UNIQUE'), 
-#         'rideBonusValue': ('INTEGER', 'NOT NULL'),
-#         'excitementValue': ('INTEGER', 'NOT NULL'),
-#         'intensityValue': ('INTEGER', 'NOT NULL'),
-#         'nauseaValue': ('INTEGER', 'NOT NULL'),
-#         'alias_of': ("INTEGER",),
-#         'defaultExcitement': ('INTEGER',),
-#         'defaultIntensity': ('INTEGER',),
-#         'defaultNausea': ('INTEGER',)}
-
-
-# # create dict with columns for age modifiers
-# def create_age_columns():
-#     return {'age_start': ('INTEGER', 'NOT NULL', 'UNIQUE'),
-#         'age_end': ('INTEGER', 'UNIQUE'),
-#         'modifier_type': ('TEXT', 'NOT NULL'),
-#         'modifier': ('INTEGER', 'NOT NULL'),
-#         'modifier_type_classic': ('TEXT', 'NOT NULL'),
-#         'modifier_classic': ('INTEGER', 'NOT NULL')}
-
-# # create dict with columns for EIN modifiers
-# def create_EIN_columns():
-#     return {'excitement': ('INTEGER', 'NOT NULL'),
-#             'intensity': ('INTEGER', 'NOT NULL'),
-#             'nausea': ('INTEGER', 'NOT NULL')}
-
-# # create dict with columns for default EIN values
-# def create_default_EIN_columns():
-#     return {'defaultExcitement': ('INTEGER',),
-#             'defaultIntensity': ('INTEGER',),
-#             'defaultNausea': ('INTEGER',)}
-
-# # create dict with columns of alias table
-# def create_alias_table_columns():
-#     return{'name': ('TEXT', 'NOT NULL', 'UNIQUE'),
-#             'OG_rowid': ('INTEGER', 'NOT NULL'),
-#             'OG_name': ('TEXT', 'NOT NULL')}
-
-# # table name for table storing EIN ratings of a ride w rowid 37 is 'ein37'
-# # or well, it used to be
-# def table_for_EIN_ratings(rowid):
-#     return 'ein' + str(rowid)
-
-# old table data
-# def create_table_data_old():
-#     table_data = dict()
-#     table_data[ride_table_name] = create_rides_columns()
-#     table_data[age_table_name] = create_age_columns()
-#     for i in range(1,80):
-#         table_name = table_for_EIN_ratings(i)
-#         table_data[table_name] = create_EIN_columns()
-#     return table_data
-
-
-
 
 
 # more specific database class
 class DB(DB_general):
-    # db_filename = 'rct_data.db'
-    # db_filename = get_db_path()[0]
-    # backup_db_filename = 'rct_data_backup.db'
-    # backup_db_filename = get_db_path()[-1]
     ride_table_name = 'rides'
     age_table_name = 'age_modifiers'
     age_table_name_classic = 'age_modifiers_classic'
@@ -119,19 +52,8 @@ class DB(DB_general):
             self.generate_rides(True)
             self.generate_age_modifiers()
             self.create_table(DB.alias_table_name, get_columns_for_table(DB.alias_table_name))
-            
-            
-        # if w_full_table_data:
-        #     ride_names0 = self.select_columns(DB.ride_table_name, ('name',))
-        #     ride_names = [DB.table_name_for_EIN_ratings(ride[0]) for ride in ride_names0]
-        #     for ride in ride_names:
-        #         self.tables[ride] = create_EIN_columns()
-        #     # add more tables to master table
-        #     for table in self.tables:
-        #         columns_and_data = DB.prepare_to_add_to_master_table(table, self.tables[table])
-        #         self.insert(DB.master_table_name, *columns_and_data)
         
-
+    # create a table for EIN ratings of a ride
     def create_table_for_ride_ratings(self, ride_name):
         table_name = DB.table_name_for_EIN_ratings(ride_name)
         columns = get_columns_for_table(DB.EIN_table_name)
@@ -219,7 +141,8 @@ class DB(DB_general):
         names.sort()
         return names
 
-    def get_age_ranges(self):
+    # get age ranges as a list of {'from': age_start, 'to': age_end}
+    def get_age_ranges(self) -> list:
         age_ranges = []
         age_ranges0 = self.select_columns(DB.age_table_name, get_column_names_for_table(DB.age_table_name)[:2])
         for ages in age_ranges0:
@@ -231,6 +154,8 @@ class DB(DB_general):
             age_ranges.append(age)
         return age_ranges
 
+    # get all the age modifiers
+    # TODO: do this better
     def get_age_modifiers(self):
         age_modifiers = dict()
         # openrct2 modifiers
