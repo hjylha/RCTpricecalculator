@@ -8,6 +8,9 @@ from pathlib import Path
 # this file (db_ini.py) and db.ini should be in the same directory
 ini_file = Path(__file__).resolve().parent / 'db.ini'
 
+if not ini_file.exists():
+    print('WARNING: "db.ini" does not exist')
+
 # get possible db paths: under [filepath] (by default only get existing file names)
 def get_db_path(existing=True):
     paths = []
@@ -91,6 +94,6 @@ def get_columns_for_tables(tables, as_dict=True):
 def get_db_info():
     db_info = dict()
     db_info['filepaths'] = get_db_path()
-    table_names = ['rides', 'age_modifiers', 'aliases', 'individual_ride_tables']
+    table_names = ['rides', 'age_modifiers', 'age_modifiers_classic', 'aliases', 'individual_ride_tables']
     db_info['table_data'] = get_columns_for_tables(table_names)
     return db_info
