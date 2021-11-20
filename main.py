@@ -18,7 +18,7 @@ from main_setup import get_suggestions_for_ride_name, no_match_text
 from main_setup import format_age_ranges, price_as_string, price_color, get_EIN_values
 
 # import db_fcns as dbf
-from db_setup import DB
+from db import DB
 
 
 class DescriptionText(BoxLayout):
