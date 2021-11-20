@@ -1,5 +1,7 @@
-import fix_imports
+from pathlib import Path
+import pytest
 
+import fix_imports
 import db_stuff
 from db_stuff import DB_general
 
@@ -49,6 +51,12 @@ def test_select_columns_where_command():
 
 
 # testing DG_general
+@pytest.fixture
+def db():
+    db_path = Path('test_db.db')
+    yield DB_general(db_path)
+    db_path.unlink()
+
 
 def test_master_table_columns():
     columns = DB_general.master_table_column_names
@@ -62,7 +70,6 @@ def test_string_to_column_data():
     column_data = DB_general.string_to_column_data(columns_as_str)
     assert column_data == DB_general.master_table_columns
 
-
 def test_column_data_as_string():
     columns_as_str = '(table_name, (TEXT, NOT NULL, UNIQUE)), (column_data, (TEXT, NOT NULL))'
     column_data_as_str = DB_general.column_data_as_string(DB_general.master_table_columns)
@@ -75,27 +82,72 @@ def test_prepare_to_add_to_master_table():
     assert result[0] == ('table_name', 'column_data')
     assert result[1] == ('Table_Name', '(Col1, (TEXT, UNIQUE))')
 
-def test_DB_general():
-    pass
 
-data = DB_general.column_data_as_string(DB_general.master_table_columns)
+def test_DB_general(db):
+    # db = DB_general('test_db.db')
+    assert 'tables' in db.tables
+    assert set(['table_name', 'column_data']) == set(db.tables['tables'].keys())
 
-print(data)
-
-cols_and_data = DB_general.prepare_to_add_to_master_table(DB_general.master_table_name, DB_general.master_table_columns)
-
-print('cols_and_data:')
-print(cols_and_data[0])
-print(cols_and_data[1])
-
-col_data = DB_general.string_to_column_data(data)
-for item in col_data:
-    print(item, col_data[item])
+def test_connect(db):
+    conn, cur = db.connect()
+    assert isinstance(conn, db_stuff.sqlite3.Connection)
+    assert isinstance(cur, db_stuff.sqlite3.Cursor)
+    conn.close()
+    with pytest.raises(db_stuff.sqlite3.ProgrammingError):
+        conn.in_transaction
 
 
-db = DB_general('test.db')
-everything = db.get_everything()
-print(len(everything))
+def test_select_columns(db):
+    table = 'tables'
+    columns = ('table_name', 'column_data')
+    column_data = db.select_columns(table, columns)
+    row = ('tables', '(table_name, (TEXT, NOT NULL, UNIQUE)), (column_data, (TEXT, NOT NULL))')
+    assert row in column_data
 
-table_test = 'test'
-col_data = {'first': ('TEXT', 'NOT NULL', 'UNIQUE'), 'second': ('TEXT',)}
+def test_insert(db):
+    table = 'tables'
+    columns = ('table_name', 'column_data')
+    data = ('test_name', 'not valid column data here')
+    db.insert(table, columns, data)
+
+    content = db.select_columns(table, columns)
+    the_rows = [row for row in content if 'test_name' in row]
+    assert the_rows[0][1] == 'not valid column data here'
+
+    conn, cur = db.connect()
+    with conn:
+        cur.execute('DELETE FROM tables WHERE table_name = ? AND column_data = ?', data)
+    conn.close()
+
+
+
+
+
+def test_get_table_data(db):
+    table_data = db.get_table_data()
+    assert 'tables' in table_data
+    assert table_data == db.tables
+
+
+
+# data = DB_general.column_data_as_string(DB_general.master_table_columns)
+
+# print(data)
+
+# cols_and_data = DB_general.prepare_to_add_to_master_table(DB_general.master_table_name, DB_general.master_table_columns)
+
+# print('cols_and_data:')
+# print(cols_and_data[0])
+# print(cols_and_data[1])
+
+# col_data = DB_general.string_to_column_data(data)
+# for item in col_data:
+#     print(item, col_data[item])
+
+
+# db = DB_general('test.db')
+# everything = db.get_everything()
+# print(len(everything))
+
+# table_test = 'test'
+# col_data = {'first': ('TEXT', 'NOT NULL', 'UNIQUE'), 'second': ('TEXT',)}
