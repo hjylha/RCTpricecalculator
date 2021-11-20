@@ -1,0 +1,86 @@
+[Transport Rides]
+Miniature Railway
+Monorail
+Suspended Monorail
+Chairlift
+Lift
+
+[Gentle Rides]
+Crooked House
+Haunted House
+Ferris Wheel
+Maze
+Merry-Go-Round
+Minigolf
+Observation Tower
+Car Ride
+Monster Trucks
+Mini Helicopters
+Spiral Slide
+Dodgems
+Space Rings
+Circus
+Ghost Train
+Flying Saucers
+Monorail Cycles
+
+
+[Roller Coasters]
+Virginia Reel
+Wooden Roller Coaster
+Wooden Wild Mouse
+Steel Wild Mouse
+Spinning Wild Mouse
+Junior Roller Coaster
+Classic Mini Roller Coaster
+Mini Roller Coaster
+Spiral Roller Coaster
+Mine Train Coaster
+Looping Roller Coaster
+Stand-up Roller Coaster
+Corkscrew Roller Coaster
+Twister Roller Coaster
+Hyper-Twister
+Giga Coaster
+Compact Inverted Coaster
+Inverted Impulse Coaster
+Mini Suspended Coaster
+Steeplechase
+Bobsleigh Coaster
+Heartline Twister Coaster
+Flying Roller Coaster
+Air Powered Vertical Coaster
+Water Coaster
+Side-friction Roller Coaster
+Reverser Roller Coaster
+Hypercoaster
+LIM Launched Coaster
+Multi-Dimension Roller Coaster
+Reverse Freefall Coaster
+Vertical Drop Coaster
+Lay-down Roller Coaster
+
+
+[Thrill Rides]
+Twist
+Magic Carpet
+Launched Freefall
+Pirate Ship
+Go-Karts
+Swinging Inverter Ship
+Motion Simulator
+3D Cinema
+Top Spin
+Roto-Drop
+Enterprise
+
+[Water Rides]
+Dinghy Slide
+Log Flume
+River Rapids
+Splash Boats
+Submarine Ride
+Boat Hire
+River Rafts
+
+[Shops & Stalls]
