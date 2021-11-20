@@ -12,10 +12,11 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.dropdown import DropDown
 from kivy.properties import BooleanProperty
 from kivy.graphics import Color, Rectangle
+
 # some fcns related to main
-import main_setup as ms
-# handling the RCT data and calculations
-from calc import calculate_price_table
+from main_setup import get_suggestions_for_ride_name, no_match_text
+from main_setup import format_age_ranges, price_as_string, price_color, get_EIN_values
+
 # import db_fcns as dbf
 from db_setup import DB
 
@@ -92,7 +93,7 @@ class RideTextBox(TextInputMod):
         # clear dropdown just in case
         self.dropdown.clear_widgets()
         # get suggestions and place them in the dropdown
-        new_sugg = ms.get_suggestions_for_ride_name(text, self.ride_names, self.max_num_of_suggestions)
+        new_sugg = get_suggestions_for_ride_name(text, self.ride_names, self.max_num_of_suggestions)
         self.num_of_suggestions = len(new_sugg)
         for i in range(self.num_of_suggestions):
             self.suggestions[i].text = new_sugg[i]
@@ -121,7 +122,7 @@ class RideTextBox(TextInputMod):
         dbf = DB()
         self.ride_names = dbf.get_ride_names()
         self.dropdown = DropDown()
-        self.no_match_text = ms.no_match_text
+        self.no_match_text = no_match_text
         self.real_focus = False
         # max 5 suggestions
         self.max_num_of_suggestions = 5
@@ -297,7 +298,7 @@ class PriceTable(GridLayout):
         self.labels[5].text = self.labels[7].text = 'non-unique'
         # place age ranges in the pricetable (10=len(age_values)/2)
         for i, line in enumerate(self.age_values):
-            self.labels[8 + 5*i].text = ms.format_age_ranges(line['from'], line['to'])
+            self.labels[8 + 5*i].text = format_age_ranges(line['from'], line['to'])
             # coloring the text by row seems not ideal
             # self.labels[8 + 5*i].color = self.row_color(i)
 
@@ -309,8 +310,8 @@ class PriceTable(GridLayout):
     def write_pricetable(self, max_prices):
         for i, priceline in enumerate(max_prices):
             for j, price in enumerate(priceline):
-                self.labels[9 + 5*i + j].text = ms.price_as_string(price)
-                self.labels[9 + 5*i + j].color = ms.price_color(price)
+                self.labels[9 + 5*i + j].text = price_as_string(price)
+                self.labels[9 + 5*i + j].color = price_color(price)
 
 
 class MainScreen(BoxLayout):
@@ -327,7 +328,7 @@ class MainScreen(BoxLayout):
         excitement_str = self.inputsection.excitement_value_box.text
         intensity_str = self.inputsection.intensity_value_box.text
         nausea_str = self.inputsection.nausea_value_box.text
-        return ms.get_EIN_values((excitement_str, intensity_str, nausea_str))
+        return get_EIN_values((excitement_str, intensity_str, nausea_str))
         
     def calculate_price(self, widget, value=None):
         if not self.inputsection.ride_name_box.is_name_ok():
