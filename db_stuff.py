@@ -44,7 +44,7 @@ class DB_general:
     
     # how to read column data from master table
     @staticmethod
-    def string_to_column_data(col_data_as_string):
+    def string_to_column_data(col_data_as_string : str) -> dict:
         column_data = dict()
         text = col_data_as_string
         while text != '':
@@ -76,15 +76,8 @@ class DB_general:
     # how to store column data in master table
     @staticmethod
     def column_data_as_string(column_data: dict) -> str:
-        text = ''
-        first = True
-        for column, value in column_data.items():
-            if first:
-                first = False
-            else:
-                text += ', '
-            text += f'({column}, {str(value)})'
-        return text
+        list_of_items = [f'({column}, ({", ".join(value)}))' for column, value in column_data.items()]
+        return ', '.join(list_of_items)
 
     # just to make sure columns and data line up
     @staticmethod
