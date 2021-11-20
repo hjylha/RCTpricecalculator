@@ -79,4 +79,17 @@ def test_get_visible_names_from_file():
     t_rides = set(('Chairlift', 'Lift', 'Miniature Railway', 'Monorail', 'Suspended Monorail'))
     assert set(names['Transport Rides']) == t_rides
 
+def test_write_visible_names_to_file():
+    filepath_og = get_data.Path('data/visible_names.txt')
+    names = get_data.get_visible_names_from_file(filepath_og)
+    filepath = get_data.Path('data/visible_names_ord_test.txt')
+    get_data.write_visible_names_to_file(names, filepath)
+    names_ord = get_data.get_visible_names_from_file(filepath)
+    for title, rides in names.items():
+        assert set(rides) == set(names_ord[title])
+    
+    big_index = names_ord['Roller Coasters'].index('Steeplechase')
+    smaller_index = names_ord['Roller Coasters'].index('Hypercoaster')
+    assert smaller_index < big_index
+    filepath.unlink()
     

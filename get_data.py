@@ -145,6 +145,32 @@ def get_age_modifiers_from_file(openrct_path=openrct2_path):
     return age_modifiers
 
 
+'''quick fcn to get visible names from a file'''
+def get_visible_names_from_file(filepath) -> dict:
+    visible_names = dict()
+    with open(filepath, 'r') as f:
+        key = ''
+        for line in f:
+            if '[' in line:
+                key = line.split(']')[0].split('[')[1]
+                visible_names[key] = []
+            elif line.strip():
+                visible_names[key].append(line.strip())
+    return visible_names
+
+# write them back to file in order
+def write_visible_names_to_file(visible_names : dict, filepath) -> None:
+    with open(filepath, 'w') as f:
+        for key, name_list in visible_names.items():
+            f.write(f'[{key}]\n')
+            if name_list:
+                name_list.sort()
+                for name in name_list:
+                    f.write(f'{name}\n')
+            f.write('\n')
+
+
+
 '''functions to get aliases from a file'''
 # TODO
 

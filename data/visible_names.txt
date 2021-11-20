@@ -1,86 +1,87 @@
 [Transport Rides]
+Chairlift
+Lift
 Miniature Railway
 Monorail
 Suspended Monorail
-Chairlift
-Lift
 
 [Gentle Rides]
+Car Ride
+Circus
 Crooked House
-Haunted House
+Dodgems
 Ferris Wheel
+Flying Saucers
+Ghost Train
+Haunted House
 Maze
 Merry-Go-Round
-Minigolf
-Observation Tower
-Car Ride
-Monster Trucks
 Mini Helicopters
-Spiral Slide
-Dodgems
-Space Rings
-Circus
-Ghost Train
-Flying Saucers
+Minigolf
 Monorail Cycles
-
+Monster Trucks
+Observation Tower
+Space Rings
+Spiral Slide
 
 [Roller Coasters]
-Virginia Reel
-Wooden Roller Coaster
-Wooden Wild Mouse
-Steel Wild Mouse
-Spinning Wild Mouse
-Junior Roller Coaster
-Classic Mini Roller Coaster
-Mini Roller Coaster
-Spiral Roller Coaster
-Mine Train Coaster
-Looping Roller Coaster
-Stand-up Roller Coaster
-Corkscrew Roller Coaster
-Twister Roller Coaster
-Hyper-Twister
-Giga Coaster
-Compact Inverted Coaster
-Inverted Impulse Coaster
-Mini Suspended Coaster
-Steeplechase
-Bobsleigh Coaster
-Heartline Twister Coaster
-Flying Roller Coaster
 Air Powered Vertical Coaster
-Water Coaster
-Side-friction Roller Coaster
-Reverser Roller Coaster
+Bobsleigh Coaster
+Classic Mini Roller Coaster
+Compact Inverted Coaster
+Corkscrew Roller Coaster
+Flying Roller Coaster
+Giga Coaster
+Heartline Twister Coaster
+Hyper-Twister
 Hypercoaster
+Inverted Hairpin Coaster
+Inverted Impulse Coaster
+Junior Roller Coaster
 LIM Launched Coaster
+Lay-down Roller Coaster
+Looping Roller Coaster
+Mine Ride
+Mine Train Coaster
+Mini Roller Coaster
+Mini Suspended Coaster
 Multi-Dimension Roller Coaster
 Reverse Freefall Coaster
+Reverser Roller Coaster
+Side-Friction Roller Coaster
+Spinning Wild Mouse
+Spiral Roller Coaster
+Stand-up Roller Coaster
+Steel Wild Mouse
+Steeplechase
+Twister Roller Coaster
 Vertical Drop Coaster
-Lay-down Roller Coaster
-
+Virginia Reel
+Water Coaster
+Wooden Roller Coaster
+Wooden Wild Mouse
 
 [Thrill Rides]
-Twist
-Magic Carpet
-Launched Freefall
-Pirate Ship
-Go-Karts
-Swinging Inverter Ship
-Motion Simulator
 3D Cinema
-Top Spin
-Roto-Drop
 Enterprise
+Go-Karts
+Launched Freefall
+Magic Carpet
+Motion Simulator
+Pirate Ship
+Roto-Drop
+Swinging Inverter Ship
+Top Spin
+Twist
 
 [Water Rides]
+Boat Hire
 Dinghy Slide
 Log Flume
+River Rafts
 River Rapids
 Splash Boats
 Submarine Ride
-Boat Hire
-River Rafts
 
 [Shops & Stalls]
+
