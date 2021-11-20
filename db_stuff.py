@@ -39,10 +39,8 @@ def select_columns_where_command(table_name, columns, columns_w_condition):
 class DB_general:
     # db should have a table of tables
     master_table_name = 'tables'
-    master_table_columns = get_columns_for_table(master_table_name, False)
+    master_table_columns = get_columns_for_table(master_table_name)
     master_table_column_names = get_column_names_for_table(master_table_name)
-    master_table_columns_dict = get_columns_for_table(master_table_name)
-    # master_table_col_name = [col for col in master_table_columns if 'UNIQUE' in master_table_columns[col]][0]
     
     # how to read column data from master table
     @staticmethod
@@ -97,7 +95,7 @@ class DB_general:
 
     # get info on all the tables in the database
     def get_table_data(self):
-        raw_table_data = self.select_columns(DB_general.master_table_name, [col[0] for col in DB_general.master_table_columns])
+        raw_table_data = self.select_columns(DB_general.master_table_name, DB_general.master_table_column_names)
         table_data = None
         if raw_table_data is not None:
             table_data = dict()
@@ -112,8 +110,8 @@ class DB_general:
         # make sure master table exists
         if self.tables is None:
             self.tables = dict()
-            self.create_table(DB_general.master_table_name, DB_general.master_table_columns_dict)
-            # self.tables = {DB_general.master_table_name: DB_general.master_table_columns_dict}
+            self.create_table(DB_general.master_table_name, DB_general.master_table_columns)
+            # self.tables = {DB_general.master_table_name: DB_general.master_table_columns}
         
 
     # connect to database
@@ -146,7 +144,7 @@ class DB_general:
                     print(command)
                     print('Table', table_name, 'already exists, but its not in', DB_general.master_table_name)
                 if check_name is None:
-                    command = create_table_command(DB_general.master_table_name, DB_general.master_table_columns_dict)
+                    command = create_table_command(DB_general.master_table_name, DB_general.master_table_columns)
                     try:
                         conn.execute(command)
                     except sqlite3.OperationalError:
