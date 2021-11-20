@@ -33,10 +33,17 @@ def test_update_command_w_where():
 
 
 def test_select_column_command():
-    pass
+    table = 'Table_Name'
+    columns = ('column1', 'column2')
+    command = 'SELECT column1, column2 FROM Table_Name;'
+    assert db_stuff.select_column_command(table, columns) == command
 
 def test_select_columns_where_command():
-    pass
+    table = 'Table_Name'
+    columns = ('column1', 'column2')
+    columns_w_cond = ('column3', 'column4')
+    command = 'SELECT column1, column2 FROM Table_Name WHERE column3 = ?, column4 = ?;'
+    assert db_stuff.select_columns_where_command(table, columns, columns_w_cond) == command
 
 # data = DB_general.column_data_as_string(DB_general.master_table_columns_dict)
 

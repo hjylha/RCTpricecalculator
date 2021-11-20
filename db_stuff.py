@@ -24,24 +24,15 @@ def update_command_w_where(table_name, columns_to_update, columns_w_condition):
     equalities2 = [f'{column} = ?' for column in columns_w_condition]
     return f'UPDATE {table_name} SET {", ".join(equalities1)} WHERE {", ".join(equalities2)};'
 
+
 # SELECT columns[0], columns[1], ... FROM table_name;
 def select_column_command(table_name, columns):
-    # command = 'SELECT ' + column_name + ' FROM ' + table_name + ';'
-    command = 'SELECT '
-    first = True
-    for column in columns:
-        if not first:
-            command += ', '
-        command += column
-        if first:
-            first = False
-    command += f' FROM {table_name};'
-    return command
-
+    return f'SELECT {", ".join(columns)} FROM {table_name};'
 
 # SELECT columns1 FROM table_name WHERE columns[0] = ?, columns[1] = ?, ...;
 def select_columns_where_command(table_name, columns, columns_w_condition):
-    pass
+    conditions = [f'{column} = ?' for column in columns_w_condition]
+    return f'SELECT {", ".join(columns)} FROM {table_name} WHERE {", ".join(conditions)};'
 
 
 # database class
