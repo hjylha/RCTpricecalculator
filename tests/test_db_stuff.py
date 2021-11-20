@@ -45,8 +45,8 @@ def test_select_column_command():
 def test_select_columns_where_command():
     table = 'Table_Name'
     columns = ('column1', 'column2')
-    columns_w_cond = ('column3', 'column4')
-    command = 'SELECT column1, column2 FROM Table_Name WHERE column3 = ?, column4 = ?;'
+    columns_w_cond = ('column3', 'column4', 'column5')
+    command = 'SELECT column1, column2 FROM Table_Name WHERE column3 = ? AND column4 = ? AND column5 = ?;'
     assert db_stuff.select_columns_where_command(table, columns, columns_w_cond) == command
 
 
@@ -104,6 +104,27 @@ def test_select_columns(db):
     row = ('tables', '(table_name, (TEXT, NOT NULL, UNIQUE)), (column_data, (TEXT, NOT NULL))')
     assert row in column_data
 
+def test_select_columns_by_column_value(db):
+    table = 'tables'
+    columns = ('table_name',)
+    columns_condition = ('table_name',)
+    condition_value = ('tables',)
+    selection = db.select_columns_by_column_value(table, columns, columns_condition, condition_value)
+    assert table in selection[0]
+    assert selection[0][0] == table
+
+    columns = ('table_name', 'column_data')
+    selection = db.select_columns_by_column_value(table, columns, columns_condition, condition_value)
+    assert table in selection[0]
+    assert 'table_name' in selection[0][1]
+
+    columns_condition = ('table_name', 'column_data')
+    condition_value = (table, '(table_name, (TEXT, NOT NULL, UNIQUE)), (column_data, (TEXT, NOT NULL))')
+    assert table in selection[0]
+    assert 'column_data' in selection[0][1]
+    
+
+
 def test_insert(db):
     table = 'tables'
     columns = ('table_name', 'column_data')
@@ -113,12 +134,27 @@ def test_insert(db):
     content = db.select_columns(table, columns)
     the_rows = [row for row in content if 'test_name' in row]
     assert the_rows[0][1] == 'not valid column data here'
-
+    # not sure if it is necessary to remove this row, but let's do it anyway
     conn, cur = db.connect()
     with conn:
         cur.execute('DELETE FROM tables WHERE table_name = ? AND column_data = ?', data)
     conn.close()
 
+def test_create_table(db):
+    table = 'New_Table'
+    column_data = {'Col1': ('TEXT', 'NOT NULL', 'UNIQUE'), 'Col2': ('INTEGER')}
+    db.create_table(table, column_data)
+
+    # this table should have been inserted to 'tables' table
+    tables = db.select_columns_by_column_value('tables', ('table_name', 'column_data'), ('table_name',), (table,))
+    assert table in tables[0]
+    assert 'Col2' in tables[0][1]
+    
+    # try to insert something to this table
+    columns = ('Col1', 'Col2')
+    db.insert(table, columns, ('jee', 37))
+    data = db.select_columns(table, ('Col1', 'Col2'))
+    assert data[0] == ('jee', 37)
 
 
 

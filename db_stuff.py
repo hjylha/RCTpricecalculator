@@ -29,10 +29,10 @@ def update_command_w_where(table_name, columns_to_update, columns_w_condition):
 def select_column_command(table_name, columns):
     return f'SELECT {", ".join(columns)} FROM {table_name};'
 
-# SELECT columns1 FROM table_name WHERE columns[0] = ?, columns[1] = ?, ...;
+# SELECT columns1 FROM table_name WHERE columns[0] = ? AND columns[1] = ?, ...;
 def select_columns_where_command(table_name, columns, columns_w_condition):
     conditions = [f'{column} = ?' for column in columns_w_condition]
-    return f'SELECT {", ".join(columns)} FROM {table_name} WHERE {", ".join(conditions)};'
+    return f'SELECT {", ".join(columns)} FROM {table_name} WHERE {" AND ".join(conditions)};'
 
 
 # database class
@@ -193,6 +193,20 @@ class DB_general:
             command = select_column_command(table_name, columns)
             try:
                 cur.execute(command)
+                data = cur.fetchall()
+            except sqlite3.OperationalError:
+                # presumably table or columns do not exist?
+                data = None
+        conn.close()
+        return data
+
+    def select_columns_by_column_value(self, table_name, columns, column_condition, condition_value):
+        conn, cur = self.connect()
+        with conn:
+            command = select_columns_where_command(table_name, columns, column_condition)
+            print(command)
+            try:
+                cur.execute(command, condition_value)
                 data = cur.fetchall()
             except sqlite3.OperationalError:
                 # presumably table or columns do not exist?
