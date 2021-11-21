@@ -286,19 +286,7 @@ class DB_general:
         for table, columns in self.tables.items():
             self.create_table(table, columns)
     
-
-    # backup db to another file
-    def backup_db(self, new_filename):
-        backup_db = DB_general(new_filename)
-        everything = self.get_table_data()
-        for table, col_data in everything.items():
-            if table != DB_general.master_table_name:
-                backup_db.create_table(table, col_data)
-                rows_in_table = self.select_columns(table, col_data.keys())
-                if rows_in_table is not None:
-                    for row in rows_in_table:
-                        backup_db.insert(table, col_data.keys(), row)
-    
+    # Maybe some more interesting fcns
     # create a csv file containing the data in a table
     def create_csv_file(self, table_name, csv_filename, mode='a'):
         # table_contents = []
@@ -316,3 +304,13 @@ class DB_general:
                 line = [stringify(item) for item in line]
                 file.write(f'{",".join(line)};\n')
 
+    # backup db to another file
+    def backup_db(self, backup_db):
+        # backup_db = DB_general(new_filename)
+        everything = self.get_table_data()
+        for table, col_data in everything.items():
+            if table != DB_general.master_table_name:
+                backup_db.create_table(table, col_data)
+                rows_in_table = self.select_columns(table, col_data.keys())
+                backup_db.insert_many(table, col_data.keys(), rows_in_table)
+        # print('Are .tables dicts the same?', self.tables == backup_db.tables)

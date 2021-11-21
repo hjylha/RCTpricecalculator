@@ -180,6 +180,7 @@ def test_create_table(db):
 
     # it should also be in db.tables dictionary
     assert table in db.tables
+    assert column_data == db.tables[table]
     
     # try to insert something to this table
     columns = ('Col1', 'Col2')
@@ -294,13 +295,14 @@ def test_create_tables(db):
     db.tables['test_table'] = col_data
     db.tables['empty_table'] = col_data
     db.create_tables()
+    # trying to insert to nonexistent tables should bring out errors
     db.insert('test_table', col_data.keys(), ('a', 'b', 1))
     db.insert('empty_table', col_data.keys(), ('x', 'y', 0))
+    assert db.select_all('test_table') == [(1, 'a', 'b', 1)]
+    assert db.select_all('empty_table') == [(1, 'x', 'y', 0)]
 
 
-def test_backup_db(db1):
-    pass
-
+# back to more interesting fcns
 def test_create_csv_file(db1):
     filepath = Path(__file__).parent / 'test.csv'
     db1.create_csv_file('test_table', filepath)
@@ -314,7 +316,24 @@ def test_create_csv_file(db1):
     filepath.unlink()
 
 
+@pytest.fixture
+def db_backup():
+    db_path = Path('test_db_backup.db')
+    yield DB_general(db_path)
+    db_path.unlink()
 
+def test_backup_db(db1, db_backup):
+    backup_tables = db_backup.get_table_data()
+    assert 'test_table' not in backup_tables
+    assert 'empty_table' not in backup_tables
+    tables = db1.get_table_data()
+    db1.backup_db(db_backup)
+    backup_tables = db_backup.get_table_data()
+    assert tables == backup_tables
+    for table in tables:
+        assert db1.select_all(table) == db_backup.select_all(table)
+    assert db1.tables == db_backup.tables
+    assert db1.get_everything() == db_backup.get_everything()
 
 
 
