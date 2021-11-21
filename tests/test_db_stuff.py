@@ -69,6 +69,10 @@ def test_string_to_column_data():
     columns_as_str = '(table_name, (TEXT, NOT NULL, UNIQUE)), (column_data, (TEXT, NOT NULL))'
     column_data = DB_general.string_to_column_data(columns_as_str)
     assert column_data == DB_general.master_table_columns
+    # do one item tuples cause problems?
+    column_data = {'Col1': ('TEXT',), 'Col2': ('TEXT',), 'Col3': ('INTEGER',)}
+    column_data_as_str = '(Col1, (TEXT)), (Col2, (TEXT)), (Col3, (INTEGER))'
+    assert column_data == DB_general.string_to_column_data(column_data_as_str)
 
 def test_column_data_as_string():
     columns_as_str = '(table_name, (TEXT, NOT NULL, UNIQUE)), (column_data, (TEXT, NOT NULL))'
@@ -265,13 +269,49 @@ def test_select_row_by_rowid(db1):
     assert row == (3, 'e', 'f', 3)
 
 def test_select_all(db1):
-    pass
+    table = 'test_table'
+    data = [(1, 'a', 'b', 1), (2, 'c', 'd', 2), (3, 'e', 'f', 3)]
+    assert db1.select_all(table) == data
 
 def test_get_everything(db1):
-    pass
+    everything = db1.get_everything()
+    assert 'tables' in everything
+    assert 'test_table' in everything
+    assert 'empty_table' in everything
+    tables_rows = [(1, 'tables', DB_general.column_data_as_string(DB_general.master_table_columns))]
+    tables_rows.append((2, 'test_table', '(Col1, (TEXT)), (Col2, (TEXT)), (Col3, (INTEGER))'))
+    tables_rows.append((3, 'empty_table', '(Col1, (TEXT)), (Col2, (TEXT)), (Col3, (INTEGER))'))
+    all_stuff = {'tables': tables_rows}
+    all_stuff['test_table'] = [(1, 'a', 'b', 1), (2, 'c', 'd', 2), (3, 'e', 'f', 3)]
+    all_stuff['empty_table'] = []
+    assert all_stuff == everything
 
 def test_create_tables(db):
+    # make sure test_table and empty_table do not exist at first
+    assert 'test_table' not in db.tables
+    assert 'empty_table' not in db.tables
+    col_data = {'Col1': ('TEXT',), 'Col2': ('TEXT',), 'Col3': ('INTEGER',)}
+    db.tables['test_table'] = col_data
+    db.tables['empty_table'] = col_data
+    db.create_tables()
+    db.insert('test_table', col_data.keys(), ('a', 'b', 1))
+    db.insert('empty_table', col_data.keys(), ('x', 'y', 0))
+
+
+def test_backup_db(db1):
     pass
+
+def test_create_csv_file(db1):
+    filepath = Path(__file__).parent / 'test.csv'
+    db1.create_csv_file('test_table', filepath)
+    # check the contents of this file
+    with open(filepath, 'r') as f:
+        assert f.readline().strip() == 'Col1,Col2,Col3;'
+        assert f.readline().strip() == 'a,b,1;'
+        assert f.readline().strip() == 'c,d,2;'
+        assert f.readline().strip() == 'e,f,3;'
+    # remove the csv file after the test
+    filepath.unlink()
 
 
 

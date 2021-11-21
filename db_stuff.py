@@ -223,6 +223,7 @@ class DB_general:
             conn.execute(command, data)
         conn.close()
 
+    # hopefully columns are in the correct order here
     def insert_and_create_table_if_needed(self, table_name, column_data, data):
         try:
             self.insert(table_name, column_data.keys(), data)
@@ -260,10 +261,6 @@ class DB_general:
         rows = self.select_rows_by_column_value(table_name, 'rowid', rowid)
         return rows[0]
 
-    
-
-    
-
     # get everything from a table
     def select_all(self, table_name):
         conn, cur = self.connect()
@@ -286,8 +283,8 @@ class DB_general:
 
     # create all the tables according to self.tables
     def create_tables(self):
-        for table in self.tables:
-            self.create_table(table, self.tables[table])
+        for table, columns in self.tables.items():
+            self.create_table(table, columns)
     
 
     # backup db to another file
