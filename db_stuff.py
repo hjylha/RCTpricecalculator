@@ -18,11 +18,11 @@ def update_command_w_rowid(table_name, columns):
     equalities = [f'{column} = ?' for column in columns]
     return f'UPDATE {table_name} SET {", ".join(equalities)} WHERE rowid = ?;'
 
-# UPDATE table_name SET columns[0] = ?, columns[1] = ?, ... WHERE columns2[0] = ?, columns2[1] = ? ...;
+# UPDATE table_name SET columns[0] = ?, columns[1] = ?, ... WHERE columns2[0] = ? AND columns2[1] = ? ...;
 def update_command_w_where(table_name, columns_to_update, columns_w_condition):
     equalities1 = [f'{column} = ?' for column in columns_to_update]
     equalities2 = [f'{column} = ?' for column in columns_w_condition]
-    return f'UPDATE {table_name} SET {", ".join(equalities1)} WHERE {", ".join(equalities2)};'
+    return f'UPDATE {table_name} SET {", ".join(equalities1)} WHERE {" AND ".join(equalities2)};'
 
 
 # SELECT columns[0], columns[1], ... FROM table_name;
@@ -85,16 +85,6 @@ class DB_general:
         columns = ('table_name', 'column_data')
         data = (table_name, DB_general.column_data_as_string(column_dict))
         return (columns, data)
-
-    # get info on all the tables in the database
-    def get_table_data(self):
-        raw_table_data = self.select_columns(DB_general.master_table_name, DB_general.master_table_column_names)
-        table_data = None
-        if raw_table_data is not None:
-            table_data = dict()
-            for line in raw_table_data:
-                table_data[line[0]] = DB_general.string_to_column_data(line[1])
-        return table_data
     
     # initialize just by giving the location of the database, and maybe table_data as a dict
     def __init__(self, filepath_of_db) -> None:
@@ -112,6 +102,46 @@ class DB_general:
         conn = sqlite3.connect(self.filepath)
         cur = conn.cursor()
         return conn, cur
+
+    # get everything in specific columns
+    def select_columns(self, table_name, columns):
+        conn, cur = self.connect()
+        with conn:
+            command = select_column_command(table_name, columns)
+            try:
+                cur.execute(command)
+                data = cur.fetchall()
+            except sqlite3.OperationalError:
+                # presumably table or columns do not exist?
+                data = None
+        conn.close()
+        return data
+
+    # select columns with equality condition on some (possibly other) columns
+    def select_columns_by_column_value(self, table_name, columns, column_condition, condition_value):
+        conn, cur = self.connect()
+        with conn:
+            command = select_columns_where_command(table_name, columns, column_condition)
+            print(command)
+            try:
+                cur.execute(command, condition_value)
+                data = cur.fetchall()
+            except sqlite3.OperationalError:
+                # presumably table or columns do not exist?
+                data = None
+        conn.close()
+        return data
+
+    # insert data to specific columns
+    def insert(self, table_name, columns, data):
+        conn = self.connect()[0]
+        with conn:
+            command = insert_into_command(table_name, columns)
+            try:
+                conn.execute(command, data)
+            except sqlite3.IntegrityError as error:
+                print('Unable to insert:', error)
+        conn.close()
 
     # create a new table
     # column_data as a dict with column name as key, type etc as value (tuple/list)
@@ -153,28 +183,15 @@ class DB_general:
             print(check_name[0], 'should be the same as', table_name)
         # self.tables[table_name] = column_data
     
-    # create all the tables according to self.tables
-    def create_tables(self):
-        for table in self.tables:
-            self.create_table(table, self.tables[table])
-
-    # insert data to specific columns
-    def insert(self, table_name, columns, data):
-        conn = self.connect()[0]
-        with conn:
-            command = insert_into_command(table_name, columns)
-            try:
-                conn.execute(command, data)
-            except sqlite3.IntegrityError as error:
-                print('Unable to insert:', error)
-        conn.close()
-
-    def insert_and_create_table_if_needed(self, table_name, column_data, data):
-        try:
-            self.insert(table_name, column_data.keys(), data)
-        except sqlite3.OperationalError:
-            self.create_table(table_name, column_data)
-            self.insert(table_name, column_data.keys(), data)
+    # get info on all the tables in the database
+    def get_table_data(self):
+        raw_table_data = self.select_columns(DB_general.master_table_name, DB_general.master_table_column_names)
+        table_data = None
+        if raw_table_data is not None:
+            table_data = dict()
+            for line in raw_table_data:
+                table_data[line[0]] = DB_general.string_to_column_data(line[1])
+        return table_data
 
     # update data in specific columns in a row given by rowid
     def update_by_rowid(self, table_name, columns, new_data, rowid):
@@ -185,54 +202,22 @@ class DB_general:
             data.append(rowid)
             conn.execute(command, data)
         conn.close()
-
-    # get everything in specific columns
-    def select_columns(self, table_name, columns):
-        conn, cur = self.connect()
-        with conn:
-            command = select_column_command(table_name, columns)
-            try:
-                cur.execute(command)
-                data = cur.fetchall()
-            except sqlite3.OperationalError:
-                # presumably table or columns do not exist?
-                data = None
-        conn.close()
-        return data
-
-    def select_columns_by_column_value(self, table_name, columns, column_condition, condition_value):
-        conn, cur = self.connect()
-        with conn:
-            command = select_columns_where_command(table_name, columns, column_condition)
-            print(command)
-            try:
-                cur.execute(command, condition_value)
-                data = cur.fetchall()
-            except sqlite3.OperationalError:
-                # presumably table or columns do not exist?
-                data = None
-        conn.close()
-        return data
-
-    # get everything from a table
-    def select_all(self, table_name):
-        conn, cur = self.connect()
-        with conn:
-            try:
-                cur.execute(f'SELECT rowid, * FROM {table_name}')
-                all_things = cur.fetchall()
-            except sqlite3.OperationalError:
-                # table_name not found, presumably
-                all_things = None
-        conn.close()
-        return all_things
     
-    # get everything in tables referenced in self.tables
-    def get_everything(self):
-        everything = dict()
+    # update data with condition on some columns
+    def update_by_column_value(self, table_name, columns, new_data, columns_w_condition, condition):
+        pass
+
+    # create all the tables according to self.tables
+    def create_tables(self):
         for table in self.tables:
-            everything[table] = self.select_all(table)
-        return everything
+            self.create_table(table, self.tables[table])
+
+    def insert_and_create_table_if_needed(self, table_name, column_data, data):
+        try:
+            self.insert(table_name, column_data.keys(), data)
+        except sqlite3.OperationalError:
+            self.create_table(table_name, column_data)
+            self.insert(table_name, column_data.keys(), data)
 
     # get info on rows with column = value
     def select_rows_by_column_value(self, table_name, column, value):
@@ -263,6 +248,32 @@ class DB_general:
     def select_row_by_rowid(self, table_name, rowid):
         rows = self.select_rows_by_column_value(table_name, 'rowid', rowid)
         return rows[0]
+
+    
+
+    
+
+    # get everything from a table
+    def select_all(self, table_name):
+        conn, cur = self.connect()
+        with conn:
+            try:
+                cur.execute(f'SELECT rowid, * FROM {table_name}')
+                all_things = cur.fetchall()
+            except sqlite3.OperationalError:
+                # table_name not found, presumably
+                all_things = None
+        conn.close()
+        return all_things
+    
+    # get everything in tables referenced in self.tables
+    def get_everything(self):
+        everything = dict()
+        for table in self.tables:
+            everything[table] = self.select_all(table)
+        return everything
+
+    
 
     # backup db to another file
     def backup_db(self, new_filename):

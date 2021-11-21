@@ -31,8 +31,8 @@ def test_update_command_w_rowid():
 def test_update_command_w_where():
     table = 'Table_Name'
     columns = ('column1', 'column2')
-    columns_w_condition = ('rowid',)
-    command = 'UPDATE Table_Name SET column1 = ?, column2 = ? WHERE rowid = ?;'
+    columns_w_condition = ('rowid', 'column1')
+    command = 'UPDATE Table_Name SET column1 = ?, column2 = ? WHERE rowid = ? AND column1 = ?;'
     assert db_stuff.update_command_w_where(table, columns, columns_w_condition) == command
 
 
@@ -124,7 +124,6 @@ def test_select_columns_by_column_value(db):
     assert 'column_data' in selection[0][1]
     
 
-
 def test_insert(db):
     table = 'tables'
     columns = ('table_name', 'column_data')
@@ -149,6 +148,9 @@ def test_create_table(db):
     tables = db.select_columns_by_column_value('tables', ('table_name', 'column_data'), ('table_name',), (table,))
     assert table in tables[0]
     assert 'Col2' in tables[0][1]
+
+    # it should also be in db.tables dictionary
+    assert table in db.tables
     
     # try to insert something to this table
     columns = ('Col1', 'Col2')
@@ -157,12 +159,42 @@ def test_create_table(db):
     assert data[0] == ('jee', 37)
 
 
-
-
 def test_get_table_data(db):
     table_data = db.get_table_data()
     assert 'tables' in table_data
     assert table_data == db.tables
+
+
+def test_update_by_rowid(db):
+    pass
+
+def test_update_by_column_value(db):
+    pass
+
+# less important fcns
+def test_create_tables(db):
+    pass
+
+def test_insert_and_create_table_if_needed(db):
+    pass
+
+def test_select_rows_by_column_value(db):
+    pass
+
+def test_select_rows_by_text_wo_capitalization(db):
+    pass
+
+def test_select_row_by_rowid(db):
+    pass
+
+def test_select_all(db):
+    pass
+
+def test_get_everything(db):
+    pass
+
+
+
 
 
 
