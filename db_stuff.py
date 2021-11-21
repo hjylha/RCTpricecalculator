@@ -216,12 +216,12 @@ class DB_general:
     
     # update data with condition on some columns
     def update_by_column_value(self, table_name, columns, new_data, columns_w_condition, condition):
-        pass
-
-    # create all the tables according to self.tables
-    def create_tables(self):
-        for table in self.tables:
-            self.create_table(table, self.tables[table])
+        conn = self.connect()[0]
+        with conn:
+            command = update_command_w_where(table_name, columns, columns_w_condition)
+            data = list(new_data) + list(condition)
+            conn.execute(command, data)
+        conn.close()
 
     def insert_and_create_table_if_needed(self, table_name, column_data, data):
         try:
@@ -284,6 +284,10 @@ class DB_general:
             everything[table] = self.select_all(table)
         return everything
 
+    # create all the tables according to self.tables
+    def create_tables(self):
+        for table in self.tables:
+            self.create_table(table, self.tables[table])
     
 
     # backup db to another file

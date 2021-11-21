@@ -199,33 +199,48 @@ def test_get_table_data(db1):
     assert table_data['test_table'] == column_data
 
 
-def test_update_by_rowid(db):
-    pass
+def test_update_by_rowid(db1):
+    table = 'test_table'
+    columns = ('Col2', 'Col3')
+    new_value = ('X', 99)
+    db1.update_by_rowid(table, columns, new_value, 1)
+    # did it update?
+    rows = db1.select_columns_by_column_value(table, columns, ('rowid',), (1,))
+    assert rows[0] == new_value
 
-def test_update_by_column_value(db):
-    pass
+def test_update_by_column_value(db1):
+    table = 'test_table'
+    columns = ('Col2', 'Col3')
+    new_value = ('X', 99)
+    columns_w_cond = ('Col1', 'Col2')
+    cond = ('c', 'd')
+    db1.update_by_column_value(table, columns, new_value, columns_w_cond, cond)
+    # did it update?
+    rows = db1.select_columns_by_column_value(table, columns, ('rowid',), (2,))
+    assert rows[0] == new_value
 
 # less important fcns
+def test_insert_and_create_table_if_needed(db1):
+    pass
+
+def test_select_rows_by_column_value(db1):
+    pass
+
+def test_select_rows_by_text_wo_capitalization(db1):
+    pass
+
+def test_select_row_by_rowid(db1):
+    pass
+
+def test_select_all(db1):
+    pass
+
+def test_get_everything(db1):
+    pass
+
 def test_create_tables(db):
     pass
 
-def test_insert_and_create_table_if_needed(db):
-    pass
-
-def test_select_rows_by_column_value(db):
-    pass
-
-def test_select_rows_by_text_wo_capitalization(db):
-    pass
-
-def test_select_row_by_rowid(db):
-    pass
-
-def test_select_all(db):
-    pass
-
-def test_get_everything(db):
-    pass
 
 
 
