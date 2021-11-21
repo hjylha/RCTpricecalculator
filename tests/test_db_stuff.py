@@ -150,7 +150,7 @@ def test_insert_many(db):
     content = db.select_columns(table, columns)
     rows = [row for row in content if search_name in row]
     assert len(rows) == len(data)
-
+    assert ['name1', 'name2', 'name3'] == [row[0] for row in rows]
 
 
 def test_create_table(db):
@@ -180,12 +180,20 @@ def db1(db):
     table = 'test_table'
     column_data = {'Col1': ('TEXT',), 'Col2': ('TEXT',), 'Col3': ('INTEGER',)}
     dbg.create_table(table, column_data)
+    columns = ('Col1', 'Col2', 'Col3')
+    datalist = [('a', 'b', 1), ('c', 'd', 2), ('e', 'f', 3)]
+    dbg.insert_many(table, columns, datalist)
+    # create an empty table with same columns as above
+    empty_table = 'empty_table'
+    dbg.create_table(empty_table, column_data)
     return dbg
 
 def test_get_table_data(db1):
     table_data = db1.get_table_data()
     assert 'tables' in table_data
     assert table_data == db1.tables
+    # db1 tables should be in table_data
+    assert 'empty_table' in table_data
     assert 'test_table' in table_data
     column_data = {'Col1': ('TEXT',), 'Col2': ('TEXT',), 'Col3': ('INTEGER',)}
     assert table_data['test_table'] == column_data
