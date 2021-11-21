@@ -103,6 +103,8 @@ def test_select_columns(db):
     column_data = db.select_columns(table, columns)
     row = ('tables', '(table_name, (TEXT, NOT NULL, UNIQUE)), (column_data, (TEXT, NOT NULL))')
     assert row in column_data
+    # trying to select from nonexistent table
+    assert db.select_columns('non_existing', ('Not', 'Existing')) is None
 
 def test_select_columns_by_column_value(db):
     table = 'tables'
@@ -112,6 +114,8 @@ def test_select_columns_by_column_value(db):
     selection = db.select_columns_by_column_value(table, columns, columns_condition, condition_value)
     assert table in selection[0]
     assert selection[0][0] == table
+    # trying to select from nonexistent table
+    assert db.select_columns_by_column_value('non_existing', ('Not', 'Existing'), ('Not',), (1,)) is None
 
     columns = ('table_name', 'column_data')
     selection = db.select_columns_by_column_value(table, columns, columns_condition, condition_value)
@@ -139,6 +143,9 @@ def test_insert(db):
     with conn:
         cur.execute('DELETE FROM tables WHERE table_name = ? AND column_data = ?', data)
     conn.close()
+    # trying to insert to a nonexistent table
+    with pytest.raises(db_stuff.sqlite3.OperationalError):
+        db.insert('nonexistent', ('nothing',), (0,))
 
 def test_insert_many(db):
     table = 'tables'
@@ -151,6 +158,10 @@ def test_insert_many(db):
     rows = [row for row in content if search_name in row]
     assert len(rows) == len(data)
     assert ['name1', 'name2', 'name3'] == [row[0] for row in rows]
+
+    # trying to insert to a nonexistent table
+    with pytest.raises(db_stuff.sqlite3.OperationalError):
+        db.insert('nonexistent', ('nothing',), ((0,),(1,)))
 
 
 def test_create_table(db):
@@ -221,16 +232,37 @@ def test_update_by_column_value(db1):
 
 # less important fcns
 def test_insert_and_create_table_if_needed(db1):
-    pass
+    table = 'Brand_New_Table'
+    column_data = {'Just_1_column': ('INTEGER', 'NOT NULL')}
+    data = (28,)
+    # make sure this table does not exist
+    assert table not in db1.get_table_data()
+    db1.insert_and_create_table_if_needed(table, column_data, data)
+    # was table created and data inserted?
+    table_data = db1.get_table_data()
+    assert table in table_data
+    rows = db1.select_columns(table, ('Just_1_column',))
+    assert rows[0][0] == 28
 
 def test_select_rows_by_column_value(db1):
-    pass
+    table = 'test_table'
+    column = 'Col2'
+    value = 'f'
+    rows = db1.select_rows_by_column_value(table, column, value)
+    assert rows[0] == (3, 'e', 'f', 3)
 
 def test_select_rows_by_text_wo_capitalization(db1):
-    pass
+    table = 'test_table'
+    column = 'Col2'
+    text = 'F'
+    rows = db1.select_rows_by_text_wo_capitalization(table, column, text)
+    assert rows[0] == (3, 'e', 'f', 3)
 
 def test_select_row_by_rowid(db1):
-    pass
+    table = 'test_table'
+    rowid = 3
+    row = db1.select_row_by_rowid(table, rowid)
+    assert row == (3, 'e', 'f', 3)
 
 def test_select_all(db1):
     pass
