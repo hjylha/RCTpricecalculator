@@ -130,6 +130,7 @@ def test_insert(db):
     data = ('test_name', 'not valid column data here')
     db.insert(table, columns, data)
 
+    # select content and see if inserted data is there
     content = db.select_columns(table, columns)
     the_rows = [row for row in content if 'test_name' in row]
     assert the_rows[0][1] == 'not valid column data here'
@@ -138,6 +139,19 @@ def test_insert(db):
     with conn:
         cur.execute('DELETE FROM tables WHERE table_name = ? AND column_data = ?', data)
     conn.close()
+
+def test_insert_many(db):
+    table = 'tables'
+    columns = ('table_name', 'column_data')
+    search_name = 'searchable'
+    data = (('name1', search_name), ('name2', search_name), ('name3', search_name))
+    db.insert_many(table, columns, data)
+
+    content = db.select_columns(table, columns)
+    rows = [row for row in content if search_name in row]
+    assert len(rows) == len(data)
+
+
 
 def test_create_table(db):
     table = 'New_Table'
@@ -158,11 +172,23 @@ def test_create_table(db):
     data = db.select_columns(table, ('Col1', 'Col2'))
     assert data[0] == ('jee', 37)
 
+# fixture with an added table, and maybe some rows inserted
+@pytest.fixture
+def db1(db):
+    # dbg = next(db())
+    dbg = db
+    table = 'test_table'
+    column_data = {'Col1': ('TEXT',), 'Col2': ('TEXT',), 'Col3': ('INTEGER',)}
+    dbg.create_table(table, column_data)
+    return dbg
 
-def test_get_table_data(db):
-    table_data = db.get_table_data()
+def test_get_table_data(db1):
+    table_data = db1.get_table_data()
     assert 'tables' in table_data
-    assert table_data == db.tables
+    assert table_data == db1.tables
+    assert 'test_table' in table_data
+    column_data = {'Col1': ('TEXT',), 'Col2': ('TEXT',), 'Col3': ('INTEGER',)}
+    assert table_data['test_table'] == column_data
 
 
 def test_update_by_rowid(db):

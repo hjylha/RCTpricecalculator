@@ -143,6 +143,17 @@ class DB_general:
                 print('Unable to insert:', error)
         conn.close()
 
+    # insert many rows of data
+    def insert_many(self, table_name, columns, datalist):
+        conn = self.connect()[0]
+        with conn:
+            command = insert_into_command(table_name, columns)
+            try:
+                conn.executemany(command, datalist)
+            except sqlite3.IntegrityError as error:
+                print('Unable to insert:', error)
+        conn.close()
+
     # create a new table
     # column_data as a dict with column name as key, type etc as value (tuple/list)
     def create_table(self, table_name, column_data):
