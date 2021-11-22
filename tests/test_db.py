@@ -101,22 +101,51 @@ def test_get_age_modifiers(db):
     assert age_mod['old'][-1] == {'from': 200, 'to': '', 'multiplier': 9, 'divisor': 16, 'addition': 0}
 
 def test_find_ride_info(db):
-    pass
+    ride_info = db.find_ride_info('Giga Coaster')
+    assert ride_info['name'] == 'Giga Coaster'
+    assert ride_info['rideBonusValue'] == 120
+    assert ride_info['excitementValue'] == 51
+    assert ride_info['nauseaValue'] == 10
+
+    ride_info = db.find_ride_info('Monorail')
+    assert ride_info['name'] == 'Monorail'
+    assert ride_info['rideBonusValue'] == 60
+    assert ride_info['excitementValue'] == 70
+    assert ride_info['nauseaValue'] == -10
+    assert ride_info['visible_name'] == 'Monorail'
+
 
 def test_find_og_name_of_ride(db):
-    pass
+    names = ['pirate ship', 'Giga coaster', 'Water Slide']
+    og_names = ['Swinging Ship', 'Giga Coaster', 'Dinghy Slide']
+    for name, og_name in zip(names, og_names):
+        assert db.find_og_name_of_ride(name) == og_name
 
 def test_get_ride_rowid(db):
-    pass
+    ride_name = 'Haunted House'
+    rowid = db.get_ride_rowid(ride_name)
+    
+    row = db.select_row_by_rowid(DB.ride_table_name, rowid)
+    assert ride_name in row
 
 def test_get_EIN_table_name_for_ride(db):
-    pass
+    ride = '3d Cinema'
+    assert db.get_EIN_table_name_for_ride(ride) == DB.table_name_for_EIN_ratings(ride)
+    ride = 'Log Flume'
+    assert db.get_EIN_table_name_for_ride(ride) == DB.table_name_for_EIN_ratings(ride)
 
 def test_get_EIN_values_for_ride(db):
-    pass
+    ride = 'Giga Coaster'
+    EIN_values = db.get_EIN_values_for_ride(ride)
+    assert EIN_values == (51, 32, 10)
 
+# TODO: maybe test with set values
 def test_get_default_EIN_for_ride(db):
-    pass
+    ride = 'Giga Coaster'
+    default_EIN = db.get_default_EIN_for_ride(ride)
+    assert default_EIN[0] > 600
+    assert default_EIN[1] < 600
+    assert default_EIN[2] < 400
 
 
 # back to modifying db

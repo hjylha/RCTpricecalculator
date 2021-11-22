@@ -117,14 +117,14 @@ class DB(DB_general):
     # search for a ride by name, ignoring capitalization
     def find_ride_info(self, ride_name):
         rides = self.select_rows_by_text_wo_capitalization(DB.ride_table_name, 'name', ride_name)
-        if len(rides) > 0:
+        if rides:
             return DB.ride_row_as_dict(rides[0])
         # maybe ride_name is alias
         rides = self.select_rows_by_text_wo_capitalization(DB.alias_table_name, 'name', ride_name)
-        if len(rides) > 0:
+        if rides:
             OG_rowid = rides[0][2]
             ride_row = self.select_row_by_rowid(DB.ride_table_name, OG_rowid)
-            if len(ride_row) > 0:
+            if ride_row:
                 return DB.ride_row_as_dict(ride_row)
 
     # find the og name of ride
