@@ -17,9 +17,14 @@ def test_get_db_path():
     assert path in db_paths
     assert path.parent / 'rct_data_backup.db' in db_paths
     # test db
+    # make sure it does not exist at the start
+    test_db_path = path.parent / 'tests' / 'test_rct_data.db'
+    if test_db_path.exists():
+        test_db_path.unlink()
     db_paths = db_ini.get_db_path(False, True)
-    assert db_paths == [path.parent / 'tests' / 'test_rct_data.db']
-    assert path.parent / 'tests' / 'test_rct_data.db' == db_ini.get_db_path(testing=True)[0]
+    assert db_ini.get_db_path(testing=True) == db_ini.get_db_path(True, True)
+    assert db_paths == [test_db_path]
+    assert test_db_path == db_ini.get_db_path(testing=True)[0]
 
 
 def test_get_columns_for_table():

@@ -40,6 +40,7 @@ def get_db_path(existing=True, testing=False):
                 elif testing and 'test' in line:
                     path = make_sure_path_is_absolute(Path(line.strip()))
                     path_to_add = True
+                    existing = False
                 if path_to_add:
                     if (existing and path.exists()) or not existing:
                         paths.append(path)
