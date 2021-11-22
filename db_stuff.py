@@ -1,5 +1,5 @@
 import sqlite3
-from db_ini import get_column_names_for_table, get_columns_for_table
+# from db_ini import get_column_names_for_table, get_columns_for_table
 
 # a very not safe way to create SQL commands
 # CREATE TABLE table_name (column type etc, column type);
@@ -39,8 +39,10 @@ def select_columns_where_command(table_name, columns, columns_w_condition):
 class DB_general:
     # db should have a table of tables
     master_table_name = 'tables'
-    master_table_columns = get_columns_for_table(master_table_name)
-    master_table_column_names = get_column_names_for_table(master_table_name)
+    master_table_columns = {'table_name': ('TEXT', 'NOT NULL', 'UNIQUE'), 'column_data': ('TEXT', 'NOT NULL')}
+    master_table_column_names = ('table_name', 'column_data')
+    # master_table_columns = get_columns_for_table(master_table_name)
+    # master_table_column_names = get_column_names_for_table(master_table_name)
     
     # how to read column data from master table
     @staticmethod

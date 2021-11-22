@@ -4,6 +4,7 @@ import pytest
 import fix_imports
 import db_stuff
 from db_stuff import DB_general
+import db_ini
 
 
 # testing fcns creating sql commands
@@ -60,9 +61,9 @@ def db():
 
 def test_master_table_columns():
     columns = DB_general.master_table_column_names
-    assert columns == ('table_name', 'column_data')
+    assert columns == db_ini.get_column_names_for_table('tables')
     column_data = DB_general.master_table_columns
-    assert column_data == {'table_name': ('TEXT', 'NOT NULL', 'UNIQUE'), 'column_data': ('TEXT', 'NOT NULL')}
+    assert column_data == db_ini.get_columns_for_table('tables')
 
 
 def test_string_to_column_data():
