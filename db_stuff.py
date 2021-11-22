@@ -39,7 +39,8 @@ def select_columns_where_command(table_name, columns, columns_w_condition):
 class DB_general:
     # db should have a table of tables
     master_table_name = 'tables'
-    master_table_columns = {'table_name': ('TEXT', 'NOT NULL', 'UNIQUE'), 'column_data': ('TEXT', 'NOT NULL')}
+    master_table_columns = {'table_name': ('TEXT', 'NOT NULL', 'UNIQUE'), 
+                            'column_data': ('TEXT', 'NOT NULL')}
     master_table_column_names = ('table_name', 'column_data')
     # master_table_columns = get_columns_for_table(master_table_name)
     # master_table_column_names = get_column_names_for_table(master_table_name)
@@ -195,7 +196,17 @@ class DB_general:
             print('Table', table_name, 'already exists')
             print(check_name[0], 'should be the same as', table_name)
         # self.tables[table_name] = column_data
-    
+
+    # remove a table from db
+    def drop_table(self, table_name):
+        conn, cur = self.connect()
+        with conn:
+            cur.execute(f'DROP TABLE {table_name};')
+            # remove table info from tables
+            command = f'DELETE FROM {DB_general.master_table_name} WHERE {DB_general.master_table_column_names[0]} = ?;'
+            cur.execute(command, (table_name,))
+        conn.close()
+        
     # get info on all the tables in the database
     def get_table_data(self):
         raw_table_data = self.select_columns(DB_general.master_table_name, DB_general.master_table_column_names)

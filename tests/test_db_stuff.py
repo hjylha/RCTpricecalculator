@@ -189,6 +189,26 @@ def test_create_table(db):
     data = db.select_columns(table, ('Col1', 'Col2'))
     assert data[0] == ('jee', 37)
 
+def test_drop_table(db):
+    table = 'New_Table'
+    column_data = {'Col1': ('TEXT', 'NOT NULL', 'UNIQUE'), 'Col2': ('INTEGER')}
+    db.create_table(table, column_data)
+    # New_Table should be empty
+    assert db.select_columns(table, column_data.keys()) == []
+    
+    db.drop_table(table)
+    # table should be removed from the master table
+    table_names = [row[0] for row in db.select_columns('tables', ('table_name',))]
+    assert table not in table_names
+    # when table is dropped, inserting should raise an exception
+    with pytest.raises(db_stuff.sqlite3.OperationalError):
+        db.insert(table, column_data.keys(), ('some_text', 42))
+    # dropping a nonexistent table should raise an exception
+    with pytest.raises(db_stuff.sqlite3.OperationalError):
+        db.drop_table('nonexistent_test_table')
+
+
+
 # fixture with an added table, and maybe some rows inserted
 @pytest.fixture
 def db1(db):
@@ -204,6 +224,7 @@ def db1(db):
     empty_table = 'empty_table'
     dbg.create_table(empty_table, column_data)
     return dbg
+
 
 def test_get_table_data(db1):
     table_data = db1.get_table_data()
