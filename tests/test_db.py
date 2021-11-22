@@ -34,6 +34,13 @@ def test_ride_row_as_dict():
     assert ride['EIN_table_name'] == 'GigaCoaster'
     assert ride['defaultExcitement'] > 600
 
+def test_age_mod_row_as_dict():
+    age_row = (0, 5, 3, 2, 0)
+    age_mod = DB.age_mod_row_as_dict(age_row)
+    assert age_mod == {'from': 0, 'to': 5, 'multiplier': 3, 'divisor': 2, 'addition': 0}
+    age_row = (200, None, 81, 1024, 0)
+    age_mod = DB.age_mod_row_as_dict(age_row)
+    assert age_mod == {'from': 200, 'to': '', 'multiplier': 81, 'divisor': 1024, 'addition': 0}
 
 def test_init():
     test_folder = Path(__file__).resolve().parent
@@ -81,3 +88,58 @@ def test_get_age_ranges(db):
     assert age_ranges[2] == {'from': 13, 'to': 40}
     assert age_ranges[6] == {'from': 104, 'to': 120}
     assert age_ranges[-1] == {'from': 200, 'to': ''}
+
+def test_get_age_modifiers(db):
+    # assert DB.age_table_name in db.get_table_data()
+    # assert set(('age_start', 'age_end', 'multiplier', 'divisor', 'addition')) == set(db.get_table_data()[DB.age_table_name].keys())
+    age_mod = db.get_age_modifiers()
+    assert len(age_mod['new']) == 10
+    assert len(age_mod['old']) == 10
+    assert age_mod['new'][0] == {'from': 0, 'to': 5, 'multiplier': 3, 'divisor': 2, 'addition': 0}
+    assert age_mod['old'][0] == {'from': 0, 'to': 5, 'multiplier': 1, 'divisor': 1, 'addition': 30}
+    assert age_mod['new'][9] == {'from': 200, 'to': '', 'multiplier': 9, 'divisor': 16, 'addition': 0}
+    assert age_mod['old'][-1] == {'from': 200, 'to': '', 'multiplier': 9, 'divisor': 16, 'addition': 0}
+
+def test_find_ride_info(db):
+    pass
+
+def test_find_og_name_of_ride(db):
+    pass
+
+def test_get_ride_rowid(db):
+    pass
+
+def test_get_EIN_table_name_for_ride(db):
+    pass
+
+def test_get_EIN_values_for_ride(db):
+    pass
+
+def test_get_default_EIN_for_ride(db):
+    pass
+
+
+# back to modifying db
+def test_insert_values_for_ride_ratings(db0):
+    pass
+
+def test_update_default_values(db0):
+    pass
+
+def test_calculate_average_EIN(db0):
+    pass
+
+def test_set_average_values_as_default(db0):
+    pass
+
+def test_set_average_values_as_default_for_all(db0):
+    pass
+
+def test_add_alias(db0):
+    pass
+
+def test_add_ride(db0):
+    pass
+
+def test_calculate_max_prices(db0):
+    pass

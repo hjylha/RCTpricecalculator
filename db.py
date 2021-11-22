@@ -15,13 +15,13 @@ class DB(DB_general):
     EIN_table_name = 'individual_ride_tables'
 
     @staticmethod
-    def table_name_for_EIN_ratings(ride_name):
+    def table_name_for_EIN_ratings(ride_name) -> str:
         if ride_name.lower() == '3d cinema':
             return 'Cinema'
         return ''.join(ride_name.split(' '))
-    
+
     @staticmethod
-    def ride_row_as_dict(row):
+    def ride_row_as_dict(row) -> dict:
         columns = ['rowid'] + list(get_column_names_for_table(DB.ride_table_name))
         return {column: item for item, column in zip(row, columns)}
         # return {'name': row[1], 
@@ -35,6 +35,21 @@ class DB(DB_general):
         #         'defaultNausea': row[10],
         #         'rideBonusValue': row[2],
         #         'rowid': row[0]}
+    
+    # is this needed?
+    @staticmethod
+    def age_mod_row_as_dict(row) -> dict:
+        columns = get_column_names_for_table(DB.age_table_name)
+        age_mod0 = DB.table_row_as_dict(row, columns)
+        age_mod = {key: age_mod0[key] for key in columns[2:]}
+        # make sure None changes to empty string
+        def none_as_empty_string(item):
+            if item is None:
+                return ''
+            return item
+        age_mod['from'] = age_mod0['age_start']
+        age_mod['to'] = none_as_empty_string(age_mod0['age_end'])
+        return age_mod
 
     def __init__(self, is_backup_db=False, existing=True, testing=False) -> None:
         # test db does not need to exist
@@ -55,13 +70,14 @@ class DB(DB_general):
             # self.create_table(DB.alias_table_name, get_columns_for_table(DB.alias_table_name))
         
     # create a table for EIN ratings of a ride
-    def create_table_for_ride_ratings(self, ride_name):
+    def create_table_for_ride_ratings(self, ride_name) -> None:
         table_name = DB.table_name_for_EIN_ratings(ride_name)
         columns = get_columns_for_table(DB.EIN_table_name)
         self.create_table(table_name, columns)
     
     # get names of all rides in db, includes aliases by default
-    def get_ride_names(self, with_aliases=True):
+    # TODO: use visible names instead
+    def get_ride_names(self, with_aliases=True) -> list:
         # names0 = self.select_columns(DB.ride_table_name, ('visible_name',))
         names0 = self.select_columns(DB.ride_table_name, ('name',))
         names = [name[0] for name in names0]
@@ -87,35 +103,15 @@ class DB(DB_general):
         return age_ranges
 
     # get all the age modifiers
-    # TODO: do this better
     def get_age_modifiers(self):
         age_modifiers = dict()
         # openrct2 modifiers
-        age_modifiers['new'] = []
-        age_modifiers0 = self.select_all(DB.age_table_name)
-        for age in age_modifiers0:
-            age_modifier = {'from': age[1]}
-            if age[2] is not None:
-                age_modifier['to'] = age[2]
-            else:
-                age_modifier['to'] = ''
-            age_modifier['multiplier'] = age[3]
-            age_modifier['divisor'] = age[4]
-            age_modifier['addition'] = age[5]
-            age_modifiers['new'].append(age_modifier)
+        columns = get_column_names_for_table(DB.age_table_name)
+        age_modifiers0 = self.select_columns(DB.age_table_name, columns)
+        age_modifiers['new'] = [DB.age_mod_row_as_dict(age) for age in age_modifiers0]
         # classic modifiers
-        age_modifiers['old'] = []
-        age_modifiers1 = self.select_all(DB.age_table_name_classic)
-        for age in age_modifiers1:
-            age_modifier = {'from': age[1]}
-            if age[2] is not None:
-                age_modifier['to'] = age[2]
-            else:
-                age_modifier['to'] = ''
-            age_modifier['multiplier'] = age[3]
-            age_modifier['divisor'] = age[4]
-            age_modifier['addition'] = age[5]
-            age_modifiers['old'].append(age_modifier)
+        age_modifiers1 = self.select_columns(DB.age_table_name_classic, columns)
+        age_modifiers['old'] = [DB.age_mod_row_as_dict(age) for age in age_modifiers1]
         return age_modifiers
 
     # search for a ride by name, ignoring capitalization
