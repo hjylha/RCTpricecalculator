@@ -10,6 +10,7 @@ from db import DB
 def db0():
     yield DB(testing=True)
     # delete the file?
+    # Path('test_rct_data.db').unlink()
 
 # and then a copy of the whole thing
 @pytest.fixture
@@ -52,4 +53,31 @@ def test_create_table_for_ride_ratings(db0):
     db0.insert('MerryGoRound', columns, (100, 60, 75))
     rows = db0.select_all('MerryGoRound')
     assert rows[0] == (1, 100, 60, 75, None)
+    # remove the table
+    db0.drop_table('MerryGoRound')
+    assert 'MerryGoRound' not in db0.get_table_data()
 
+
+# using 'full' data
+def test_get_ride_names(db):
+    ride_names = db.get_ride_names(False)
+    assert len(ride_names) == 79
+    assert 'Giga Coaster' in ride_names
+    assert 'Swinging Ship' in ride_names
+    assert 'Pirate Ship' not in ride_names
+
+    ride_names = db.get_ride_names()
+    # hopefully alias table is not empty
+    if aliases := db.select_all(db.alias_table_name):
+        print('yeah there is stuff in aliases')
+        assert len(ride_names) == 79 + len(aliases)
+        assert 'Pirate Ship' in ride_names
+        assert 'Water Slide' in ride_names
+
+def test_get_age_ranges(db):
+    age_ranges = db.get_age_ranges()
+    assert len(age_ranges) == 10
+    assert age_ranges[0] == {'from': 0, 'to': 5}
+    assert age_ranges[2] == {'from': 13, 'to': 40}
+    assert age_ranges[6] == {'from': 104, 'to': 120}
+    assert age_ranges[-1] == {'from': 200, 'to': ''}
