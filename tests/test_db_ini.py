@@ -7,10 +7,18 @@ import db_ini
 path = db_ini.Path('C:\\Ohjelmointiprojekteja\\PythonProjects\\RCTpricecalculator\\rct_data.db')
 
 
+def test_make_sure_path_is_absolute():
+    assert db_ini.make_sure_path_is_absolute(db_ini.Path('rct_data.db')) == path
+    assert db_ini.make_sure_path_is_absolute(path) == path
+
 def test_get_db_path():
     db_paths = db_ini.get_db_path(False)
     # path = db_ini.Path('C:\\Ohjelmointiprojekteja\\PythonProjects\\RCTpricecalculator\\rct_data.db')
     assert path in db_paths
+    assert path.parent / 'rct_data_backup.db' in db_paths
+    # test db
+    db_paths = db_ini.get_db_path(False, True)
+    assert db_paths == [path.parent / 'tests' / 'test_rct_data.db']
 
 
 def test_get_columns_for_table():

@@ -9,10 +9,18 @@ from pathlib import Path
 ini_file = Path(__file__).resolve().parent / 'db.ini'
 
 if not ini_file.exists():
-    print('WARNING: "db.ini" does not exist')
+    # print(f'WARNING: {ini_file} does not exist')
+    raise Exception(f'{ini_file} not found')
+
+# use absolute paths just in case
+def make_sure_path_is_absolute(path):
+    if not path.is_absolute():
+        path = Path(__file__).resolve().parent.joinpath(path)
+    return path
+
 
 # get possible db paths: under [filepath] (by default only get existing file names)
-def get_db_path(existing=True):
+def get_db_path(existing=True, testing=False):
     paths = []
     with open(ini_file, 'r') as f:
         reading = False
@@ -25,12 +33,16 @@ def get_db_path(existing=True):
                 if '[' in line:
                     break
                 # otherwise add to possible paths
-                path = Path(line.strip())
-                # use absolute paths just in case
-                if not path.is_absolute():
-                    path = Path(__file__).resolve().parent.joinpath(path)
-                if (existing and path.exists()) or not existing:
-                    paths.append(path)
+                path_to_add = False
+                if not testing and 'test' not in line:
+                    path = make_sure_path_is_absolute(Path(line.strip()))
+                    path_to_add = True
+                elif testing and 'test' in line:
+                    path = make_sure_path_is_absolute(Path(line.strip()))
+                    path_to_add = True
+                if path_to_add:
+                    if (existing and path.exists()) or not existing:
+                        paths.append(path)
             # start reading when [filepath] is reached
             elif '[filepath]' in line:
                 reading = True
