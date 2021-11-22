@@ -70,7 +70,8 @@ def test_get_age_modifiers_from_file():
 
 # test getting visible names
 def test_get_visible_names_from_file():
-    filepath = get_data.Path('data/visible_names.txt')
+    filepath = get_data.Path(__file__).parent.parent / 'data' / 'visible_names.txt'
+    # filepath = get_data.Path('data/visible_names.txt')
     names = get_data.get_visible_names_from_file(filepath)
     assert 'Gentle Rides' in names
     assert 'Water Rides' in names
@@ -80,9 +81,12 @@ def test_get_visible_names_from_file():
     assert set(names['Transport Rides']) == t_rides
 
 def test_write_visible_names_to_file():
-    filepath_og = get_data.Path('data/visible_names.txt')
+    data_folder = get_data.Path(__file__).parent.parent / 'data'
+    filepath_og = data_folder / 'visible_names.txt'
+    # filepath_og = get_data.Path('data/visible_names.txt')
     names = get_data.get_visible_names_from_file(filepath_og)
-    filepath = get_data.Path('data/visible_names_ord_test.txt')
+    # filepath = get_data.Path('data/visible_names_ord_test.txt')
+    filepath = data_folder / 'visible_names_ord_test.txt'
     get_data.write_visible_names_to_file(names, filepath)
     names_ord = get_data.get_visible_names_from_file(filepath)
     for title, rides in names.items():
