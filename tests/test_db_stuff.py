@@ -87,6 +87,12 @@ def test_prepare_to_add_to_master_table():
     assert result[0] == ('table_name', 'column_data')
     assert result[1] == ('Table_Name', '(Col1, (TEXT, UNIQUE))')
 
+def test_table_row_as_dict():
+    columns = ('col1', 'col2', 'col3')
+    row = (1, 2, 3)
+    row_dict = DB_general.table_row_as_dict(row, columns)
+    assert row_dict == {'col1': 1, 'col2': 2, 'col3': 3}
+
 
 def test_DB_general(db):
     # db = DB_general('test_db.db')
@@ -356,28 +362,3 @@ def test_backup_db(db1, db_backup):
         assert db1.select_all(table) == db_backup.select_all(table)
     assert db1.tables == db_backup.tables
     assert db1.get_everything() == db_backup.get_everything()
-
-
-
-
-# data = DB_general.column_data_as_string(DB_general.master_table_columns)
-
-# print(data)
-
-# cols_and_data = DB_general.prepare_to_add_to_master_table(DB_general.master_table_name, DB_general.master_table_columns)
-
-# print('cols_and_data:')
-# print(cols_and_data[0])
-# print(cols_and_data[1])
-
-# col_data = DB_general.string_to_column_data(data)
-# for item in col_data:
-#     print(item, col_data[item])
-
-
-# db = DB_general('test.db')
-# everything = db.get_everything()
-# print(len(everything))
-
-# table_test = 'test'
-# col_data = {'first': ('TEXT', 'NOT NULL', 'UNIQUE'), 'second': ('TEXT',)}

@@ -89,6 +89,11 @@ class DB_general:
         data = (table_name, DB_general.column_data_as_string(column_dict))
         return (columns, data)
     
+    @staticmethod
+    def table_row_as_dict(row: tuple, columns: tuple) -> dict:
+        return {col: item for item, col in zip(row, columns)}
+
+
     # initialize just by giving the location of the database, and maybe table_data as a dict
     def __init__(self, filepath_of_db) -> None:
         self.filepath = filepath_of_db
