@@ -68,6 +68,11 @@ class DB(DB_general):
             # self.generate_rides(True)
             # self.generate_age_modifiers()
             # self.create_table(DB.alias_table_name, get_columns_for_table(DB.alias_table_name))
+        # make sure the main tables exist
+        table_names = (DB.ride_table_name, DB.age_table_name, DB.age_table_name_classic, DB.alias_table_name)
+        for table in table_names:
+            if table not in self.tables:
+                self.create_table(table, get_columns_for_table(table))
         
     # create a table for EIN ratings of a ride
     def create_table_for_ride_ratings(self, ride_name) -> None:

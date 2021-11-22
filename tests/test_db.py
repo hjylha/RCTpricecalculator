@@ -48,9 +48,16 @@ def test_init():
     assert db1.filepath == test_folder.parent / 'rct_data_backup.db'
     db2 = DB()
     assert db2.filepath == test_folder.parent / 'rct_data.db'
+    # test db should have
     db3 = DB(testing=True)
     assert db3.filepath.parent == test_folder
     assert db3.filepath == test_folder / 'test_rct_data.db'
+    assert DB.ride_table_name in db3.tables
+    assert DB.alias_table_name in db3.tables
+    assert DB.age_table_name in db3.tables
+    assert DB.age_table_name_classic in db3.tables
+    # remove the db file??
+    Path(test_folder / 'test_rct_data.db').unlink()
 
 
 def test_create_table_for_ride_ratings(db0):
