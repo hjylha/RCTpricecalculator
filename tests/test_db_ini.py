@@ -19,6 +19,7 @@ def test_get_db_path():
     # test db
     db_paths = db_ini.get_db_path(False, True)
     assert db_paths == [path.parent / 'tests' / 'test_rct_data.db']
+    assert path.parent / 'tests' / 'test_rct_data.db' == db_ini.get_db_path(testing=True)[0]
 
 
 def test_get_columns_for_table():

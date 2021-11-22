@@ -3,6 +3,7 @@
 /.vscode
 /tests/__pycache__
 /tests/.pytest_cache
+/tests/test_rct_data.db
 example*
 test.db
 test.py
