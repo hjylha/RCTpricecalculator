@@ -1,10 +1,10 @@
 
 # fcns for using csv files
-from get_data import read_ride_values, read_age_values
+# from get_data import read_ride_values, read_age_values
 
 # little functions for the calculator
-def rounding(num):
-    return int((num // 10) // 10 * 10)
+# def rounding(num):
+#     return int((num // 10) // 10 * 10)
 
 # EIN multipliers as 3-tuple, EIN as 3-tuple (of integers)
 def calculate_ride_value(EIN_multipliers : tuple, EIN : tuple) -> int:
