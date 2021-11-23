@@ -108,7 +108,7 @@ class DB(DB_general):
         return age_ranges
 
     # get all the age modifiers
-    def get_age_modifiers(self):
+    def get_age_modifiers(self) -> dict:
         age_modifiers = dict()
         # openrct2 modifiers
         columns = get_column_names_for_table(DB.age_table_name)
@@ -120,7 +120,7 @@ class DB(DB_general):
         return age_modifiers
 
     # search for a ride by name, ignoring capitalization
-    def find_ride_info(self, ride_name):
+    def find_ride_info(self, ride_name: str) -> dict:
         rides = self.select_rows_by_text_wo_capitalization(DB.ride_table_name, 'name', ride_name)
         if rides:
             return DB.ride_row_as_dict(rides[0])
@@ -137,32 +137,32 @@ class DB(DB_general):
         return self.find_ride_info(ride_name)['name']
 
     # just get the rowid of the row containing ride
-    def get_ride_rowid(self, ride_name):
+    def get_ride_rowid(self, ride_name: str) -> int:
         ride_info = self.find_ride_info(ride_name)
         return ride_info['rowid']
 
     # IS THIS A DUPLICATE??? table_name_for_EIN_ratings(ride_name)
-    def get_EIN_table_name_for_ride(self, ride_name):
+    def get_EIN_table_name_for_ride(self, ride_name: str) -> str:
         ride_info = self.find_ride_info(ride_name)
         return ride_info['EIN_table_name']
     
     # get rating modifiers of a ride
-    def get_EIN_values_for_ride(self, ride_name):
+    def get_EIN_values_for_ride(self, ride_name: str) -> tuple:
         ride_info = self.find_ride_info(ride_name)
         return (ride_info['excitementValue'], ride_info['intensityValue'], ride_info['nauseaValue'])
 
     # get default ratings of a ride
-    def get_default_EIN_for_ride(self, ride_name):
+    def get_default_EIN_for_ride(self, ride_name: str) -> tuple:
         ride_info = self.find_ride_info(ride_name)
         return (ride_info['defaultExcitement'], ride_info['defaultIntensity'], ride_info['defaultNausea'])
 
     # add a new ride to the ride table (probably useless fcn)
-    def add_ride(self, ride_data):
+    def add_ride(self, ride_data: tuple):
         columns = get_column_names_for_table(DB.ride_table_name)
         self.insert(DB.ride_table_name, columns, ride_data)    
     
     # add alias
-    def add_alias(self, alias, og_ride, is_visible=True, EIN_modifiers=None):
+    def add_alias(self, alias: str, og_ride: str, is_visible=True, EIN_modifiers=None):
         ride_info = self.find_ride_info(og_ride)
         columns = get_column_names_for_table(DB.alias_table_name)
         alias_data = [alias, ride_info['rowid'], ride_info['name']]
@@ -180,7 +180,7 @@ class DB(DB_general):
         self.insert(DB.alias_table_name, columns, alias_data)
 
     # insert ride ratings to db
-    def insert_values_for_ride_ratings(self, ride_name, EIN, with_timestamp=True):
+    def insert_values_for_ride_ratings(self, ride_name: str, EIN: tuple, with_timestamp=True):
         # make sure aliases point to the og ride name
         # og_ride = self.find_og_name_of_ride(ride_name)
         table_name = self.get_EIN_table_name_for_ride(ride_name)
@@ -192,13 +192,13 @@ class DB(DB_general):
             self.insert(table_name, columns[:3], EIN)
 
     # set new default/average values for EIN
-    def update_default_values(self, ride_name, new_default_EIN):
+    def update_default_values(self, ride_name: str, new_default_EIN: tuple):
         rowid = self.get_ride_rowid(ride_name)
         EIN_columns = get_column_names_for_table(DB.ride_table_name)[-3:]
         self.update_by_rowid(DB.ride_table_name, EIN_columns, new_default_EIN, rowid)
 
     # calculate average EIN ratings
-    def calculate_average_EIN(self, ride_name):
+    def calculate_average_EIN(self, ride_name: str) -> tuple:
         # og_ride = self.find_og_name_of_ride(ride_name)
         table = self.get_EIN_table_name_for_ride(ride_name)
         all_data = self.select_all(table)
@@ -214,7 +214,7 @@ class DB(DB_general):
         return (int(mean(e_values)), int(mean(i_values)), int(mean(n_values)))
 
     # calculate average EIN and set them as default
-    def set_average_values_as_default(self, ride_name):
+    def set_average_values_as_default(self, ride_name: str):
         average_EIN = self.calculate_average_EIN(ride_name)
         if average_EIN is not None:
             self.update_default_values(ride_name, average_EIN)
