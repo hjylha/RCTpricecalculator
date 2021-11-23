@@ -5,7 +5,7 @@ from get_data import check_missing_for_alias, capitalize_first_letters
 from db import DB
 
 # check openrct files and get info about rides from there
-def generate_rides(db, with_EIN_tables=False):
+def generate_rides(db, with_EIN_tables=True):
     # create rides table
     column_data = get_columns_for_table(DB.ride_table_name)
     db.create_table(DB.ride_table_name, column_data)
