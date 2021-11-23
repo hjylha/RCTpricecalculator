@@ -3,6 +3,7 @@ import sqlite3
 import pytest
 
 import fix_imports
+import db as dbf
 from db import DB
 # import db_ini
 
@@ -12,6 +13,29 @@ def db0():
     yield DB(testing=True)
     # delete the file?
     # Path('test_rct_data.db').unlink()
+
+# add some rides and EIN tables for those rides (or just one...)
+@pytest.fixture
+def db1(db0):
+    ride = ('Giga Coaster', 120, 51, 32, 10, 'GigaCoaster', 'Giga Coaster', None, None, None)
+    db0.add_ride(ride)
+    db0.create_table_for_ride_ratings(ride[0])
+    yield db0
+    # remove EIN table and inserted ride
+    db0.drop_table(DB.table_name_for_EIN_ratings(ride[0]))
+    conn, cur = db0.connect()
+    with conn:
+        cur.execute(f'DELETE from {DB.ride_table_name} WHERE name = ?;', (ride[0],))
+    conn.close()
+
+# add some EIN ratings for giga coaster
+@pytest.fixture
+def db2(db1):
+    ride = 'Giga Coaster'
+    EIN_values = [(700, 500, 300), (650, 450, 275), (675, 475, 250)]
+    for ein in EIN_values:
+        db1.insert_values_for_ride_ratings(ride, ein, False)
+    return db1
 
 # and then a copy of the whole thing
 @pytest.fixture
@@ -171,10 +195,11 @@ def test_get_default_EIN_for_ride(db0):
     ride = 'Giga Coaster'
     row = (ride, 120, 51, 32, 10, 'GigaCoaster', 'Giga Coaster', 700, 500, 300)
     db0.add_ride(row)
-    default_EIN = db0.get_default_EIN_for_ride(ride)
-    assert default_EIN[0] == 700
-    assert default_EIN[1] == 500
-    assert default_EIN[2] == 300
+    assert db0.get_default_EIN_for_ride(ride) == (700, 500, 300)
+    # default_EIN = db0.get_default_EIN_for_ride(ride)
+    # assert default_EIN[0] == 700
+    # assert default_EIN[1] == 500
+    # assert default_EIN[2] == 300
     # remove the row
     conn, cur = db0.connect()
     with conn:
@@ -215,22 +240,86 @@ def test_add_alias(db0):
     assert db0.select_all(DB.alias_table_name) == []
     
 
-def test_insert_values_for_ride_ratings(db0):
+def test_insert_values_for_ride_ratings(db1):
+    # ride_row = ('Giga Coaster', 120, 51, 32, 10, 'GigaCoaster', 'Giga Coaster', 700, 500, 300)
+    ride = 'Giga Coaster'
+    EIN_table = DB.table_name_for_EIN_ratings(ride)
+    EIN_values = [(700, 500, 300), (650, 450, 275), (675, 475, 250)]
+    start_time = int(dbf.time.time())
+    for ein in EIN_values:
+        db1.insert_values_for_ride_ratings(ride, ein)
+    end_time = int(dbf.time.time())
+    # timestamp should be unique, so all of these cannot be inserted
+    EIN_ratings = db1.select_all(EIN_table)
+    # assuming of course that t
+    assert end_time - start_time <= 1
+    assert len(EIN_ratings) < 3
+    assert EIN_ratings[0][:4] == (1, 700, 500, 300)
+    # technically time could increment to the next second
+    assert EIN_ratings[0][-1] in (start_time, end_time)
+
+    # remove ratings and insert them again without timestamp
+    conn, cur = db1.connect()
+    with conn:
+        cur.execute(f'DELETE FROM {EIN_table}')
+    conn.close()
+    for ein in EIN_values:
+        db1.insert_values_for_ride_ratings(ride, ein, False)
+    EIN_ratings = db1.select_all(EIN_table)
+    assert len(EIN_ratings) == 3
+    assert EIN_ratings[0] == (1, 700, 500, 300, None)
+
+
+def test_update_default_values(db1):
+    ride = 'Giga Coaster'
+    # there should not be any default values
+    assert db1.get_default_EIN_for_ride(ride) == (None, None, None)
+    default_EIN = (700, 500, 300)
+    db1.update_default_values(ride, default_EIN)
+    assert db1.get_default_EIN_for_ride(ride) == default_EIN
+
+
+def test_calculate_average_EIN(db2):
+    ride = 'Giga Coaster'
+    assert db2.calculate_average_EIN(ride) == (675, 475, 275)
+
+def test_set_average_values_as_default(db2):
+    ride = 'Giga Coaster'
+    # there should not be any default values
+    assert db2.get_default_EIN_for_ride(ride) == (None, None, None)
+    # set average as default
+    db2.set_average_values_as_default(ride)
+    assert db2.get_default_EIN_for_ride(ride) == (675, 475, 275)
+
+def test_set_average_values_as_default_for_all(db2):
+    # add ferris wheel and some EIN ratings for it
+    ride_row = ('Ferris Wheel', 42, 5, 2, 1, 'FerrisWheel', 'Ferris Wheel', None, None, None)
+    db2.add_ride(ride_row)
+    db2.create_table_for_ride_ratings(ride_row[0])
+    EIN_ratings = [(125, 50, 55), (135, 50, 55), (100, 50, 55)]
+    for ein in EIN_ratings:
+        db2.insert_values_for_ride_ratings(ride_row[0], ein, False)
+    # set average as default for all
+    db2.set_average_values_as_default_for_all()
+    ride_data = db2.select_all(DB.ride_table_name)
+    assert ride_data[0][-3:] == (675, 475, 275)
+    assert ride_data[1][-3:] == (120, 50, 55)
+
+
+def test_calculate_max_prices(db):
+    ride = 'Giga Coaster'
+    EIN = (800, 550, 400)
+    max_prices = db.calculate_max_prices(ride, EIN, True)
+    assert max_prices[0] == (1760, 1320, 1780, 1320)
+    assert max_prices[5] == (480, 360, 480, 360)
+    max_prices = db.calculate_max_prices(ride, EIN, False)
+    assert max_prices[0] == (440, 320, 440, 320)
+    assert max_prices[5] == (120, 80, 120, 80)
+
+# TODO
+def test_write_main_tables_to_csv_file(db):
     pass
 
-def test_update_default_values(db0):
-    pass
-
-def test_calculate_average_EIN(db0):
-    pass
-
-def test_set_average_values_as_default(db0):
-    pass
-
-def test_set_average_values_as_default_for_all(db0):
-    pass
-
-
-
-def test_calculate_max_prices(db0):
+def test_print_stuff(db):
+    # does anyone care about this?
     pass
