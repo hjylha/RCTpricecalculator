@@ -4,6 +4,7 @@ import pytest
 
 import fix_imports
 from db import DB
+# import db_ini
 
 # DB with no data perhaps
 @pytest.fixture
@@ -140,22 +141,80 @@ def test_get_EIN_table_name_for_ride(db):
     assert db.get_EIN_table_name_for_ride(ride) == DB.table_name_for_EIN_ratings(ride)
     ride = 'Log Flume'
     assert db.get_EIN_table_name_for_ride(ride) == DB.table_name_for_EIN_ratings(ride)
+    ride = 'Pirate Ship'
+    assert db.get_EIN_table_name_for_ride(ride) == 'SwingingShip'
 
 def test_get_EIN_values_for_ride(db):
     ride = 'Giga Coaster'
     EIN_values = db.get_EIN_values_for_ride(ride)
     assert EIN_values == (51, 32, 10)
 
-# TODO: maybe test with set values
-def test_get_default_EIN_for_ride(db):
-    ride = 'Giga Coaster'
-    default_EIN = db.get_default_EIN_for_ride(ride)
-    assert default_EIN[0] > 600
-    assert default_EIN[1] < 600
-    assert default_EIN[2] < 400
-
 
 # back to modifying db
+def test_add_ride(db0):
+    # make sure there is nothing in rides
+    assert db0.select_all(DB.ride_table_name) == []
+
+    ride_data = ('Giga Coaster', 120, 51, 32, 10, 'GigaCoaster', 'Giga Coaster', 700, 500, 300)
+    db0.add_ride(ride_data)
+    assert db0.select_all(DB.ride_table_name)[0][1:] == ride_data
+
+    # remove the row
+    conn, cur = db0.connect()
+    with conn:
+        cur.execute(f'DELETE FROM {DB.ride_table_name} WHERE name = ?;', ('Giga Coaster',))
+    conn.close()
+    assert db0.select_all(DB.ride_table_name) == []
+
+
+def test_get_default_EIN_for_ride(db0):
+    ride = 'Giga Coaster'
+    row = (ride, 120, 51, 32, 10, 'GigaCoaster', 'Giga Coaster', 700, 500, 300)
+    db0.add_ride(row)
+    default_EIN = db0.get_default_EIN_for_ride(ride)
+    assert default_EIN[0] == 700
+    assert default_EIN[1] == 500
+    assert default_EIN[2] == 300
+    # remove the row
+    conn, cur = db0.connect()
+    with conn:
+        cur.execute(f'DELETE FROM {DB.ride_table_name} WHERE name = ?;', (ride,))
+    conn.close()
+    assert db0.select_all(DB.ride_table_name) == []
+
+def test_add_alias(db0):
+    # make sure there is nothing in rides and aliases
+    assert db0.select_all(DB.ride_table_name) == []
+    assert db0.select_all(DB.alias_table_name) == []
+    # add giga coaster
+    og_names = ('Giga Coaster', 'Super Coaster', 'Imaginary Coaster')
+    # ride_data = (og_name, 120, 51, 32, 10, 'GigaCoaster', 'Giga Coaster', 700, 500, 300)
+    for og_name in og_names:
+        ride_data = (og_name, 120, 51, 32, 10, DB.table_name_for_EIN_ratings(og_name), og_name, None, None, None)
+        db0.add_ride(ride_data)
+    # make an alias for giga coaster
+    aliases = ('Gigantic Coaster', 'Superior Coaster', 'Nonexistent Coaster')
+    db0.add_alias(aliases[0], og_names[0], is_visible=False, EIN_modifiers=(10, 15, 10))
+    db0.add_alias(aliases[1], og_names[1], is_visible=True, EIN_modifiers=None)
+    db0.add_alias(aliases[2], og_names[2], is_visible=False, EIN_modifiers=(-5, -10, -100))
+    # check alias table
+    alias_content = db0.select_all(DB.alias_table_name)
+    assert alias_content[0] == (1, aliases[0], 1, og_names[0], 0, 10, 15, 10)
+    assert alias_content[1] == (2, aliases[1], 2, og_names[1], 1, None, None, None)
+    assert alias_content[2] == (3, aliases[2], 3, og_names[2], 0, -5, -10, -100)    
+
+    # remove the rows
+    og_names = [(og_name,) for og_name in og_names]
+    aliases = [(alias,) for alias in aliases]
+    conn, cur = db0.connect()
+    with conn:
+        cur.executemany(f'DELETE FROM {DB.ride_table_name} WHERE name = ?;', og_names)
+        cur.executemany(f'DELETE FROM {DB.alias_table_name} WHERE name = ?;', aliases)
+    conn.close()
+    assert db0.select_all(DB.ride_table_name) == []
+    assert db0.select_all(DB.alias_table_name) == []
+    
+
 def test_insert_values_for_ride_ratings(db0):
     pass
 
@@ -171,11 +230,7 @@ def test_set_average_values_as_default(db0):
 def test_set_average_values_as_default_for_all(db0):
     pass
 
-def test_add_alias(db0):
-    pass
 
-def test_add_ride(db0):
-    pass
 
 def test_calculate_max_prices(db0):
     pass

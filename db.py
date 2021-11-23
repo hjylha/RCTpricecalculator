@@ -156,8 +156,29 @@ class DB(DB_general):
         ride_info = self.find_ride_info(ride_name)
         return (ride_info['defaultExcitement'], ride_info['defaultIntensity'], ride_info['defaultNausea'])
 
+    # add a new ride to the ride table (probably useless fcn)
+    def add_ride(self, ride_data):
+        columns = get_column_names_for_table(DB.ride_table_name)
+        self.insert(DB.ride_table_name, columns, ride_data)    
     
-    
+    # add alias
+    def add_alias(self, alias, og_ride, is_visible=True, EIN_modifiers=None):
+        ride_info = self.find_ride_info(og_ride)
+        columns = get_column_names_for_table(DB.alias_table_name)
+        alias_data = [alias, ride_info['rowid'], ride_info['name']]
+        # alias_data = [capitalize_first_letters(alias), ride_info['rowid'], ride_info['name']]
+        # visibility of the name
+        if is_visible:
+            alias_data += [1]
+        else:
+            alias_data += [0]
+        # if alias has EIN modifiers, put them in the end, otherwise ignore those columns
+        if EIN_modifiers is not None:
+            alias_data += list(EIN_modifiers)
+        else:
+            columns = columns[:-3]
+        self.insert(DB.alias_table_name, columns, alias_data)
+
     # insert ride ratings to db
     def insert_values_for_ride_ratings(self, ride_name, EIN, with_timestamp=True):
         # make sure aliases point to the og ride name
@@ -207,26 +228,6 @@ class DB(DB_general):
         for ride in ride_names:
             self.set_average_values_as_default(ride)
 
-    # add alias
-    def add_alias(self, alias, og_ride, is_visible=True, EIN_modifiers=None):
-        ride_info = self.find_ride_info(og_ride)
-        columns = get_column_names_for_table(DB.alias_table_name)
-        alias_data = [alias, ride_info['rowid'], ride_info['name']]
-        # alias_data = [capitalize_first_letters(alias), ride_info['rowid'], ride_info['name']]
-        # visibility of the name
-        if is_visible:
-            alias_data += [1]
-        else:
-            alias_data += [0]
-        # if alias has EIN modifiers, put them in the end, otherwise ignore those columns
-        if EIN_modifiers is not None:
-            alias_data += list(EIN_modifiers)
-        else:
-            columns = columns[:-3]
-        self.insert(DB.alias_table_name, columns, alias_data)
-
-    
-
     # create a csv file containing data in main tables
     def write_main_tables_to_csv_file(self, filename):
         main_tables =  [DB.ride_table_name, DB.alias_table_name, DB.age_table_name, DB.age_table_name_classic]
@@ -235,6 +236,20 @@ class DB(DB_general):
                 f.write(f'\n[{table}]\n')
             self.create_csv_file(table, filename)
 
+    # calculate max price table for a ride
+    def calculate_max_prices(self, ride : str, EIN : tuple, free_entry : bool) -> list:
+        age_modifiers = self.get_age_modifiers()
+        EIN_modifiers = self.get_EIN_values_for_ride(ride)
+        max_prices = []
+        for age_modifier in age_modifiers['new']:
+            prices = calc_max_prices(EIN, EIN_modifiers, age_modifier, free_entry)
+            max_prices.append(prices)
+        for i, age_modifier in enumerate(age_modifiers['old']):
+            prices = calc_max_prices(EIN, EIN_modifiers, age_modifier, free_entry)
+            max_prices[i] = (*max_prices[i], *prices)
+        return max_prices
+    
+    # finally, just print a lot of stuff
     def print_stuff(self):
         rides = self.select_all(DB.ride_table_name)
         ages = self.select_all(DB.age_table_name)
@@ -258,21 +273,3 @@ class DB(DB_general):
                 print(ride, 'has nothing')
             else:
                 print(ride, 'has', len(stuff), 'ratings')
-
-    # add a new ride to the ride table (probably useless fcn)
-    def add_ride(self, ride_data):
-        columns = get_column_names_for_table(DB.ride_table_name)
-        self.insert_data(DB.ride_table_name, columns, ride_data)
-
-    # calculate max price table for a ride
-    def calculate_max_prices(self, ride : str, EIN : tuple, free_entry : bool) -> list:
-        age_modifiers = self.get_age_modifiers()
-        EIN_modifiers = self.get_EIN_values_for_ride(ride)
-        max_prices = []
-        for age_modifier in age_modifiers['new']:
-            prices = calc_max_prices(EIN, EIN_modifiers, age_modifier, free_entry)
-            max_prices.append(prices)
-        for i, age_modifier in enumerate(age_modifiers['old']):
-            prices = calc_max_prices(EIN, EIN_modifiers, age_modifier, free_entry)
-            max_prices[i] = (*max_prices[i], *prices)
-        return max_prices
