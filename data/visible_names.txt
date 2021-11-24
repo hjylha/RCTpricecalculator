@@ -17,7 +17,7 @@ Haunted House
 Maze
 Merry-Go-Round
 Mini Helicopters
-Minigolf
+Mini Golf
 Monorail Cycles
 Monster Trucks
 Observation Tower
@@ -38,7 +38,7 @@ Hypercoaster
 Inverted Hairpin Coaster
 Inverted Impulse Coaster
 Junior Roller Coaster
-LIM Launched Coaster
+LIM Launched Roller Coaster
 Lay-down Roller Coaster
 Looping Roller Coaster
 Mine Ride
