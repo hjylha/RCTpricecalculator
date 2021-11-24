@@ -269,6 +269,12 @@ def test_insert_values_for_ride_ratings(db1):
     assert len(EIN_ratings) == 3
     assert EIN_ratings[0] == (1, 700, 500, 300, None)
 
+def test_update_visible_name(db1):
+    ride = 'Giga Coaster'
+    new_name = 'Testing-Stuff With Update'
+    db1.update_visible_name(ride, new_name)
+    selection = db1.select_columns(DB.ride_table_name, ('visible_name',))
+    assert selection[0][0] == new_name
 
 def test_update_default_values(db1):
     ride = 'Giga Coaster'
@@ -278,6 +284,19 @@ def test_update_default_values(db1):
     db1.update_default_values(ride, default_EIN)
     assert db1.get_default_EIN_for_ride(ride) == default_EIN
 
+def test_update_alias_visibility(db1):
+    db1.add_alias('testalias', 'Giga Coaster')
+    assert db1.select_columns(DB.alias_table_name, ('is_visible',))[0][0] == 1
+    db1.update_alias_visibility('testalias', False)
+    assert db1.select_columns(DB.alias_table_name, ('is_visible',))[0][0] == 0
+
+def test_update_EIN_modifiers_of_alias(db1):
+    db1.add_alias('testalias', 'Giga Coaster')
+    columns = ('excitement_modifier', 'intensity_modifier', 'nausea_modifier')
+    assert db1.select_columns(DB.alias_table_name, columns)[0] == (None, None, None)
+    new_ein_mod = (10, 5, None)
+    db1.update_EIN_modifiers_of_alias('testalias', new_ein_mod)
+    assert db1.select_columns(DB.alias_table_name, columns)[0] == new_ein_mod
 
 def test_calculate_average_EIN(db2):
     ride = 'Giga Coaster'

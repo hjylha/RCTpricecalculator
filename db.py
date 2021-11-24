@@ -191,11 +191,25 @@ class DB(DB_general):
         else:
             self.insert(table_name, columns[:3], EIN)
 
+    # change the visible name of the ride
+    def update_visible_name(self, ride_name: str, visible_name: str) -> None:
+        self.update_by_column_value(DB.ride_table_name, ('visible_name',), (visible_name,), ('name',), (ride_name,))
+
     # set new default/average values for EIN
-    def update_default_values(self, ride_name: str, new_default_EIN: tuple):
+    def update_default_values(self, ride_name: str, new_default_EIN: tuple) -> None:
         rowid = self.get_ride_rowid(ride_name)
         EIN_columns = get_column_names_for_table(DB.ride_table_name)[-3:]
         self.update_by_rowid(DB.ride_table_name, EIN_columns, new_default_EIN, rowid)
+
+    # set visibility of an alias
+    def update_alias_visibility(self, alias_name: str, is_visible: bool) -> None:
+        value = 1 if is_visible else 0
+        print(value)
+        self.update_by_column_value(DB.alias_table_name, ('is_visible',), (value,), ('name',), (alias_name,))
+
+    def update_EIN_modifiers_of_alias(self, alias_name: str, EIN_modifiers: tuple) -> None:
+        columns = get_column_names_for_table(DB.alias_table_name)[-3:]
+        self.update_by_column_value(DB.alias_table_name, columns, EIN_modifiers, ('name',), (alias_name,))
 
     # calculate average EIN ratings
     def calculate_average_EIN(self, ride_name: str) -> tuple:
