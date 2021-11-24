@@ -37,6 +37,7 @@ Hyper-Twister
 Hypercoaster
 Inverted Hairpin Coaster
 Inverted Impulse Coaster
+Inverted Roller Coaster
 Junior Roller Coaster
 LIM Launched Roller Coaster
 Lay-down Roller Coaster
@@ -54,6 +55,7 @@ Spiral Roller Coaster
 Stand-up Roller Coaster
 Steel Wild Mouse
 Steeplechase
+Suspended Swinging Coaster
 Twister Roller Coaster
 Vertical Drop Coaster
 Virginia Reel
