@@ -26,6 +26,11 @@ def dbe(db):
 def db0():
     return db_manage.DB(is_backup_db=True)
 
+# real db
+@pytest.fixture
+def db_actual():
+    return db_manage.DB()
+
 class TestManagement():
 
     def test_add_aliases_from_alias_list(self, dbe):
@@ -36,16 +41,42 @@ class TestManagement():
         # little bit specific to this point in time, but...
         assert (2, 'Carousel', 49, 'Merry Go Round', 0, None, None, None) in aliases
 
+    # maybe a better test is needed here...
+    def test_aliases_not_in_alias_list(self, dbe):
+        dbe.add_alias('nonsense', 'Giga Coaster')
+        dbe.add_alias('Pirate Ship', 'Swinging Ship')
+        assert db_manage.aliases_not_in_alias_list(dbe) == ['nonsense']
+
     def test_visible_names_not_in_db(self, db0):
         names = db_manage.visible_names_not_in_db(db0)
         assert 'Merry-Go-Round' in names
+        assert 'Mini Golf' not in names
         assert 'Lay-down Roller Coaster' in names
         assert 'Multi-Dimension Roller Coaster' in names
         assert 'Roto-Drop' in names
 
+    def test_ride_names_not_in_visible_names(self, db0):
+        names = db_manage.ride_names_not_in_visible_names(db0)
+        print(names)
+        assert len(names) == 11
+        assert 'Merry Go Round' in names
+        assert 'Mini Golf' not in names
+        assert 'Lay Down Roller Coaster' in names
+        assert 'Multi Dimension Roller Coaster' in names
+        assert 'Go Karts' in names
+        assert 'Roto Drop' in names
+
     # not really a proper test, but anyway...
     def test_are_visible_names_accounted_for(self, db0):
         assert db_manage.are_visible_names_accounted_for(db0)
+
+    def test_update_visible_names(self, dbe):
+        left_out = db_manage.update_visible_names(dbe)
+        assert len(left_out) == 2
+    
+    def test_update_alias_info(self, dbe):
+        pass
+
 
 class TestGeneration():
 

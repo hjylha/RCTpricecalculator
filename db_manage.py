@@ -15,12 +15,37 @@ from db import DB
 #         data = (alias, db.get_ride_rowid(og_ride), og_ride)
 #         db.insert(DB.alias_table_name, columns, data)
 
+# add aliases from alias list to db
 def add_aliases_from_alias_list(db):
     alias_list = get_aliases_from_alias_file()
     for alias in alias_list:
         db.add_alias(alias[0], alias[1], alias[2], alias[3:])
 
+# see which aliases are not in alias list
+def aliases_not_in_alias_list(db):
+    missing_aliases = []
+    aliases = [line[1] for line in db.select_all(DB.alias_table_name)]
+    alias_list = [line[0] for line in get_aliases_from_alias_file()]
+    for alias in aliases:
+        if alias not in alias_list:
+            missing_aliases.append(alias)
+    return missing_aliases
 
+
+# find out what normal ride names are not in visible names (so changes have to be made)
+def ride_names_not_in_visible_names(db):
+    rides_to_look_at = []
+    ride_names = db.get_ride_names(False)
+    visible_names = []
+    for names in get_visible_names_from_file().values():
+        visible_names += names
+
+    for ride in ride_names:
+        if ride not in visible_names:
+            rides_to_look_at.append(ride)
+    return rides_to_look_at
+
+# which visible names are not in db
 def visible_names_not_in_db(db):
     missing_names = []
     visible_names = []
@@ -32,23 +57,35 @@ def visible_names_not_in_db(db):
             missing_names.append(name)
     return missing_names
 
-
 def are_visible_names_accounted_for(db):
     found_all = True
-    visible_names = []
-    for namelist in get_visible_names_from_file().values():
-        visible_names += namelist
-    # visible_names = get_visible_names_from_file()
+    missing_names = visible_names_not_in_db(db)
     alias_list = [line[0] for line in get_aliases_from_alias_file()]
-    ride_names = db.get_ride_names(False)
-
-    list_of_names = ride_names + alias_list
-    for name in visible_names:
-        if not name in list_of_names:
+    for name in missing_names:
+        if not name in alias_list:
             print(name)
             found_all = False
     return found_all
-    
+
+
+# update visible names for rides
+def update_visible_names(db):
+    ride_names = ride_names_not_in_visible_names(db)
+    not_updated = []
+    alias_list = get_aliases_from_alias_file()
+    for ride in ride_names:
+        for alias in alias_list:
+            if ride == alias[1] and alias[2] == 1:
+                db.update_visible_name(ride, alias[1])
+                break
+        else:
+            not_updated.append(ride)
+    return not_updated
+
+
+# update alias info (visibility and EIN modifiers)
+def update_alias_info(db):
+    pass
 
 
 # check openrct files and get info about rides from there
