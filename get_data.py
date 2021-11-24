@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import final
 
 '''functions to get ride values and age modifiers from openrct2 source'''
 openrct2_path = Path('C:\\Ohjelmointiprojekteja\\c++projects\\OpenRCT2')
@@ -146,6 +147,8 @@ def get_age_modifiers_from_file(openrct_path=openrct2_path):
 
 
 '''quick fcn to get visible names from a file'''
+visible_names_file = Path(__file__).parent / 'data' / 'visible_names.txt'
+
 def get_visible_names_from_file(filepath) -> dict:
     visible_names = dict()
     with open(filepath, 'r') as f:
@@ -172,7 +175,106 @@ def write_visible_names_to_file(visible_names : dict, filepath) -> None:
 
 
 '''functions to get aliases from a file'''
-# TODO
+alias_file_path = Path(__file__).parent / 'data' / 'alias_list.csv'
+missing_rides_path = Path(__file__).parent / 'missing_rides.txt'
+
+# get alias list with alias name, og name, is_visible, Emod, Imod, Nmod
+def get_aliases_from_alias_file() -> list:
+    aliases = []
+    with open(alias_file_path, 'r') as f:
+        for line in f:
+            if not '_' in line:
+                alias_line = line.split(';')[0].split(',')
+                for i, item in enumerate(alias_line):
+                    if item:
+                        try:
+                            alias_line[i] = int(item)
+                        except ValueError:
+                            pass
+                aliases.append(tuple(alias_line))
+    return aliases
+
+# turn 'one job' into 'One Job'
+def capitalize_first_letters(text: str) -> str:
+    if not text or not isinstance(text, str):
+        return text
+    text = text[0].upper() + text[1:]
+    l = len(text)
+    for i in range(1, l):
+        if text[i - 1] in ' -':
+            try:
+                text = text[:i] + text[i].upper() + text[i + 1:]
+            except IndexError:
+                text = text[:i] + text[i].upper()
+    return text
+
+# probably not useful
+def capitalize_list(list_of_lists: list) -> list:
+    new_list = []
+    for list_of_text in list_of_lists:
+        new_list.append(capitalize_first_letters(text) for text in list_of_text)
+    return new_list
+
+# turn sldajf23laksjd5lkasdjf7 into (23, 5, 7)
+def get_numbers_from_text(text, num_of_numbers=3):
+    final_numbers = []
+    numbers = '0123456789'
+    found_number = False
+    for char in text:
+        if char in numbers:
+            if found_number:
+                curr_num = f'{curr_num}{char}'
+            else:
+                found_number = True
+                curr_num = char
+        else:
+            if found_number:
+                final_numbers.append(int(curr_num))
+                found_number = False
+    # if text ends with a number
+    if found_number:
+        final_numbers.append(int(curr_num))
+    if not final_numbers:
+        return None
+    # add Nones if necessary
+    while len(final_numbers) < num_of_numbers:
+        final_numbers += [None]
+    return tuple(final_numbers)
+
+def get_aliases_from_missing_rides() -> list:
+    aliases = []
+    with open(missing_rides_path, 'r') as f:
+        for line in f:
+            if line.strip() and 'ride,alias,still_new' not in line:
+                # num_index = None
+                numbers = [None]
+                items = line.strip().split(',')
+                if '*' in items:
+                    items.remove('*')
+                for i, item in enumerate(items):
+                    items[i] = capitalize_first_letters(item)
+                    if i == 2 and get_numbers_from_text(item):
+                        # num_index = i
+                        numbers = get_numbers_from_text(item)
+                # if num_index:
+                items = items[:2] + list(numbers)
+                # items = [capitalize_first_letters(item) for item in items]
+                aliases.append(tuple(items))
+    return aliases
+
+
+def are_missing_rides_in_alias_list():
+    found_all = True
+    missing_rides = get_aliases_from_missing_rides()
+    aliases = get_aliases_from_alias_file()
+    missing_names = [line[0] for line in missing_rides]
+    alias_names = [line[0] for line in aliases]
+    for name in missing_names:
+        if name not in alias_names:
+            print(f'missing: {name}')
+            found_all = False
+    return found_all
+
 
 # here is the old way
 
@@ -187,30 +289,11 @@ def rides_from_text(line_of_text):
             return ('', '')
     return (rides[0].strip(), rides[1].strip())
 
-def capitalize_first_letters(text):
-    if text == '':
-        return text
-    text = text[0].upper() + text[1:]
-    l = len(text)
-    for i in range(1, l):
-        if text[i - 1] in ' -':
-            try:
-                text = text[:i] + text[i].upper() + text[i + 1:]
-            except IndexError:
-                text = text[:i] + text[i].upper()
-    return text
-
-def capitalize_list(list_of_lists):
-    new_list = []
-    for list_of_text in list_of_lists:
-        new_list.append(capitalize_first_letters(text) for text in list_of_text)
-    return new_list
-
 # check missing_rides.txt for aliases
 def check_missing_for_alias(ride_list):
     aliases = []
     ride_list_l = [ride.lower() for ride in ride_list]
-    with open('missing_rides.txt', 'r') as f:
+    with open(missing_rides_path, 'r') as f:
         for line in f:
             ride1, ride2 = rides_from_text(line)
             if ride1.lower() in ride_list_l:
