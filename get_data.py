@@ -191,6 +191,8 @@ def get_aliases_from_alias_file() -> list:
                             alias_line[i] = int(item)
                         except ValueError:
                             pass
+                    else:
+                        alias_line[i] = None
                 aliases.append(tuple(alias_line))
     return aliases
 

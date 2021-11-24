@@ -98,9 +98,8 @@ def test_get_aliases_from_alias_file():
     aliases = get_data.get_aliases_from_alias_file()
     alias_names = [line[0] for line in aliases]
     assert 'B-Movie Giant Spider Ride' in alias_names
-    assert 'Flower Power Ride' in alias_names
-    flower_index = alias_names.index('Flower Power Ride')
-    assert aliases[flower_index][-4:] == (1, 75, 40, 10)
+    assert ('Minigolf', 'Mini Golf', 0, None, None, None) in aliases
+    assert ('Flower Power Ride', 'Flying Saucers', 1, 75, 40, 10) in aliases
 
 def test_capitalize_first_letters():
     assert get_data.capitalize_first_letters(123) == 123
