@@ -90,18 +90,21 @@ def import_ratings_from_old_db(db, old_db):
         # try to find the matching ride in the new ride table
         ride_info = db.find_ride_info(ride[1])
         if ride_info is not None:
-            old_EIN_table = DB.table_name_for_EIN_ratings(ride[1])
-            old_EIN_data = old_db.select_all(old_EIN_table)
+            EIN_table = DB.table_name_for_EIN_ratings(ride[1])
+            # columns = get_column_names_for_table('individual_ride_tables')
+            columns = tuple(old_db.tables[EIN_table].keys())
+            old_EIN_data = old_db.select_columns(EIN_table, columns)
             # make sure there is something in EIN table for this ride
             if old_EIN_data is not None:
-                ride_name = ride_info['name']
-                for data in old_EIN_data:
-                    db.insert_values_for_ride_ratings(ride_name, data[1:], False)
+                # for data in old_EIN_data:
+                db.insert_many(EIN_table, columns, old_EIN_data)
+                print(f'inserted {len(old_EIN_data)} to {EIN_table}')
+                    # db.insert_values_for_ride_ratings(ride_name, data[:3], False)
 
 # import aliases from old db
 def import_aliases_from_old_db(db, old_db):
     cols = list(old_db.get_table_data()[DB.alias_table_name].keys())
-    
+    add_to_line = False
     old_aliases = old_db.select_columns(DB.alias_table_name, cols)
     if 'is_visible' not in cols:
         add_to_line = True
@@ -112,28 +115,15 @@ def import_aliases_from_old_db(db, old_db):
         db.insert(DB.alias_table_name, cols, line)
 
 def generate_clean_db(db):
-    # create basic tables
-    db.create_table(DB.ride_table_name, get_columns_for_table(DB.ride_table_name))
-    print('created table', DB.ride_table_name)
-    # db.create_table(DB.age_table_name, create_age_columns())
-    db.create_table(DB.alias_table_name, get_columns_for_table(DB.alias_table_name))
-    print('created table', DB.alias_table_name)
     # bring in the data
-    db.generate_rides(True)
-    print('rides generated')
-    print('and hopefully also EIN tables for rides')
-    db.generate_age_modifiers()
-    print('age modifier table and values done')
-    db.check_aliases()
-    print('aliases checked')
-
-def generate_db_using_backup(db):
-    # init hopefully creates some stuff
+    generate_rides(db, True)
+    generate_age_modifiers(db)
+    # TODO
     # db.check_aliases()
     # print('aliases checked')
-    db.import_aliases_from_old_db(DB(is_backup_db=True))
-    print('aliases imported')
-    db.import_ratings_from_old_db(DB(is_backup_db=True))
-    print('ratings imported')
+
+def generate_db_using_backup(db):
+    DB(is_backup_db=True).backup_db(db)
+    # use averages as default values
     db.set_average_values_as_default_for_all()
-    print('averages set as default EIN values')
+    # print('averages set as default EIN values')
