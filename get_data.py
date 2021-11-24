@@ -149,9 +149,9 @@ def get_age_modifiers_from_file(openrct_path=openrct2_path):
 '''quick fcn to get visible names from a file'''
 visible_names_file = Path(__file__).parent / 'data' / 'visible_names.txt'
 
-def get_visible_names_from_file(filepath) -> dict:
+def get_visible_names_from_file() -> dict:
     visible_names = dict()
-    with open(filepath, 'r') as f:
+    with open(visible_names_file, 'r') as f:
         key = ''
         for line in f:
             if '[' in line:
