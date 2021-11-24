@@ -1,3 +1,4 @@
+from os import name
 from pathlib import Path
 import pytest
 
@@ -26,8 +27,25 @@ def db0():
     return db_manage.DB(is_backup_db=True)
 
 class TestManagement():
-    def test_check_aliases(self, db):
-        pass
+
+    def test_add_aliases_from_alias_list(self, dbe):
+        assert not dbe.select_all(DB.alias_table_name)
+        db_manage.add_aliases_from_alias_list(dbe)
+        aliases = dbe.select_all(DB.alias_table_name)
+        assert len(aliases) > 50
+        # little bit specific to this point in time, but...
+        assert (2, 'Carousel', 49, 'Merry Go Round', 0, None, None, None) in aliases
+
+    def test_visible_names_not_in_db(self, db0):
+        names = db_manage.visible_names_not_in_db(db0)
+        assert 'Merry-Go-Round' in names
+        assert 'Lay-down Roller Coaster' in names
+        assert 'Multi-Dimension Roller Coaster' in names
+        assert 'Roto-Drop' in names
+
+    # not really a proper test, but anyway...
+    def test_are_visible_names_accounted_for(self, db0):
+        assert db_manage.are_visible_names_accounted_for(db0)
 
 class TestGeneration():
 

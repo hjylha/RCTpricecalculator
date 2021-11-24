@@ -1,8 +1,55 @@
 
 from db_ini import get_columns_for_table, get_column_names_for_table
 from get_data import get_age_modifiers_from_file, get_ride_data_from_files
-from get_data import check_missing_for_alias, capitalize_first_letters
+# from get_data import check_missing_for_alias, capitalize_first_letters
+from get_data import get_aliases_from_alias_file, get_visible_names_from_file
 from db import DB
+
+
+# check aliases from missing_rides.txt and add them
+# TODO maybe update these things
+# def check_aliases(db):
+#     aliases = check_missing_for_alias(db.get_ride_names(False))
+#     columns = get_column_names_for_table(DB.alias_table_name)
+#     for og_ride, alias in aliases:
+#         data = (alias, db.get_ride_rowid(og_ride), og_ride)
+#         db.insert(DB.alias_table_name, columns, data)
+
+def add_aliases_from_alias_list(db):
+    alias_list = get_aliases_from_alias_file()
+    for alias in alias_list:
+        db.add_alias(alias[0], alias[1], alias[2], alias[3:])
+
+
+def visible_names_not_in_db(db):
+    missing_names = []
+    visible_names = []
+    for names in get_visible_names_from_file().values():
+        visible_names += names
+    ride_names = db.get_ride_names(False)
+    for name in visible_names:
+        if name not in ride_names:
+            missing_names.append(name)
+    return missing_names
+
+
+def are_visible_names_accounted_for(db):
+    found_all = True
+    visible_names = []
+    for namelist in get_visible_names_from_file().values():
+        visible_names += namelist
+    # visible_names = get_visible_names_from_file()
+    alias_list = [line[0] for line in get_aliases_from_alias_file()]
+    ride_names = db.get_ride_names(False)
+
+    list_of_names = ride_names + alias_list
+    for name in visible_names:
+        if not name in list_of_names:
+            print(name)
+            found_all = False
+    return found_all
+    
+
 
 # check openrct files and get info about rides from there
 def generate_rides(db, with_EIN_tables=True):
@@ -72,15 +119,6 @@ def generate_age_modifiers(db):
     #         data.insert(0, None)
     #     data.insert(0, age['from'])
     #     db.insert(DB.age_table_name, age_columns, data)
-
-# check aliases from missing_rides.txt and add them
-# TODO maybe update these things
-def check_aliases(db):
-    aliases = check_missing_for_alias(db.get_ride_names(False))
-    columns = get_column_names_for_table(DB.alias_table_name)
-    for og_ride, alias in aliases:
-        data = (alias, db.get_ride_rowid(og_ride), og_ride)
-        db.insert(DB.alias_table_name, columns, data)
 
 
 # import EIN ratings for rides from old style db
