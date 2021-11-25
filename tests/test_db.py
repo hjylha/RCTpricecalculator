@@ -113,6 +113,13 @@ def test_get_ride_names(db):
         assert 'Pirate Ship' in ride_names
         assert 'Water Slide' in ride_names
 
+def test_get_ride_names_and_visible_names(db):
+    names = db.get_ride_names_and_visible_names()
+    assert names['Giga Coaster'] == 'Giga Coaster'
+    assert names['Merry Go Round'] == 'Merry-Go-Round'
+    assert names['Water Slide'] == 'Dinghy Slide'
+    assert names['Roto-Drop'] == 'Roto-Drop'
+
 def test_get_age_ranges(db):
     age_ranges = db.get_age_ranges()
     assert len(age_ranges) == 10
@@ -182,13 +189,17 @@ def test_add_ride(db0):
     ride_data = ('Giga Coaster', 120, 51, 32, 10, 'GigaCoaster', 'Giga Coaster', 700, 500, 300)
     db0.add_ride(ride_data)
     assert db0.select_all(DB.ride_table_name)[0][1:] == ride_data
+    # also the EIN table is created
+    assert db0.select_all(DB.table_name_for_EIN_ratings(ride_data[0])) == []
 
-    # remove the row
+    # remove the row and EIN table
     conn, cur = db0.connect()
     with conn:
         cur.execute(f'DELETE FROM {DB.ride_table_name} WHERE name = ?;', ('Giga Coaster',))
     conn.close()
     assert db0.select_all(DB.ride_table_name) == []
+    db0.drop_table(DB.table_name_for_EIN_ratings(ride_data[0]))
+    assert db0.select_all(DB.table_name_for_EIN_ratings(ride_data[0])) is None
 
 
 def test_get_default_EIN_for_ride(db0):

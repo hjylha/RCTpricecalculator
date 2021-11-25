@@ -81,7 +81,6 @@ class DB(DB_general):
         self.create_table(table_name, columns)
     
     # get names of all rides in db, includes aliases by default
-    # TODO: use visible names instead
     def get_ride_names(self, with_aliases=True) -> list:
         # names0 = self.select_columns(DB.ride_table_name, ('visible_name',))
         names0 = self.select_columns(DB.ride_table_name, ('name',))
@@ -93,6 +92,21 @@ class DB(DB_general):
                 names = names + names1
         names.sort()
         return names
+    
+    # get dict of form {name: visible_name}
+    def get_ride_names_and_visible_names(self) -> dict:
+        r_columns = ('name', 'visible_name')
+        rides = self.select_columns(DB.ride_table_name, r_columns)
+        names = {ride[0]: ride[1] for ride in rides}
+        a_columns = ('name', 'OG_name', 'is_visible')
+        aliases = self.select_columns(DB.alias_table_name, a_columns)
+        for alias in aliases:
+            if alias[2] == 1:
+                names[alias[0]] = alias[0]
+            else:
+                names[alias[0]] = names[alias[1]]
+        return names
+
 
     # get age ranges as a list of {'from': age_start, 'to': age_end}
     def get_age_ranges(self) -> list:
@@ -159,7 +173,8 @@ class DB(DB_general):
     # add a new ride to the ride table (probably useless fcn)
     def add_ride(self, ride_data: tuple):
         columns = get_column_names_for_table(DB.ride_table_name)
-        self.insert(DB.ride_table_name, columns, ride_data)    
+        self.insert(DB.ride_table_name, columns, ride_data)
+        self.create_table_for_ride_ratings(ride_data[0])
     
     # add alias
     def add_alias(self, alias: str, og_ride: str, is_visible=True, EIN_modifiers=None):
@@ -204,7 +219,6 @@ class DB(DB_general):
     # set visibility of an alias
     def update_alias_visibility(self, alias_name: str, is_visible: bool) -> None:
         value = 1 if is_visible else 0
-        print(value)
         self.update_by_column_value(DB.alias_table_name, ('is_visible',), (value,), ('name',), (alias_name,))
 
     def update_EIN_modifiers_of_alias(self, alias_name: str, EIN_modifiers: tuple) -> None:
