@@ -21,7 +21,8 @@ def dbs(db):
     ride2 = ('Merry Go Round', 45, 50, 10, 0, 'MerryGoRound', 'Merry Go Round', 131, 60, 75)
     ride3 = ('Swinging Ship', 35, 50, 30, 10, 'SwingingShip', 'Swinging Ship', 251, 245, 251)
     ride4 = ('Hybrid Coaster', 120, 52, 36, 10, 'HybridCoaster', 'Hybrid Coaster', None, None, None)
-    for ride in (ride1, ride2, ride3, ride4):
+    ride5 = ('Corkscrew Roller Coaster', 100, 50, 30, 10, 'CorkscrewRollerCoaster', 'Corkscrew Roller Coaster', 508, 605, 243)
+    for ride in (ride1, ride2, ride3, ride4, ride5):
         db.add_ride(ride)
         db.create_table_for_ride_ratings(ride[0])
     return db
@@ -46,6 +47,7 @@ def db0():
 class TestManagement():
 
     def test_add_aliases_from_alias_list(self, dbe):
+        # alias table should be empty
         assert not dbe.select_all(DB.alias_table_name)
         db_manage.add_aliases_from_alias_list(dbe)
         aliases = dbe.select_all(DB.alias_table_name)
@@ -91,8 +93,21 @@ class TestManagement():
         visible_names = [item[0] for item in dbs.select_columns(DB.ride_table_name, ('visible_name',))]
         assert 'Merry-Go-Round' in visible_names
     
-    def test_update_alias_info(self, dbe):
-        pass
+    def test_update_alias_info(self, dbs):
+        dbs.add_alias('Corkscrew Coaster', 'Corkscrew Roller Coaster', True)
+        dbs.add_alias('Double Deck Carousel', 'Merry Go Round', False)
+        dbs.add_alias('Pirate Ship', 'Swinging Ship', False)
+        db_manage.update_alias_info(dbs)
+        columns =('name', 'is_visible', 'excitement_modifier', 'intensity_modifier', 'nausea_modifier')
+        selection = dbs.select_columns(DB.alias_table_name, columns)
+        corkscrew = [line for line in selection if 'Corkscrew Coaster' in line][0]
+        assert corkscrew[1] == 0
+        carousel = [line for line in selection if 'Double Deck Carousel' in line][0]
+        assert carousel[1] == 1
+        assert carousel[-3:] == (11, 3, 1)
+        ship = [line for line in selection if 'Pirate Ship' in line][0]
+        assert ship[1] == 1
+        
 
 
 class TestGeneration():

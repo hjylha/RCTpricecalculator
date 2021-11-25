@@ -86,11 +86,24 @@ def update_visible_names(db):
     return not_updated
 
 
-# update alias info (visibility and EIN modifiers)
+# update alias info (visibility and EIN modifiers) assuming all aliases are in alias list
 def update_alias_info(db):
+    # (name, og_name, is_visible, e, i, n)
     alias_list = get_aliases_from_alias_file()
+    list_names = [line[0] for line in alias_list]
     columns =('name', 'is_visible', 'excitement_modifier', 'intensity_modifier', 'nausea_modifier')
-    aliases = db.select_columns(DB.alias_table_name, ())
+    aliases = db.select_columns(DB.alias_table_name, columns)
+    for alias in aliases:
+        a_index = list_names.index(alias[0])
+        if (visibility := alias_list[a_index][2]) != alias[1]:
+            db.update_alias_visibility(alias[0], bool(visibility))
+        if (EIN_mod := alias_list[a_index][-3:]) != (None, None, None):
+            if EIN_mod != alias[-3:]:
+                db.update_EIN_modifiers_of_alias(alias[0], EIN_mod)
+        # if mod := alias_list[a_index][-3] != (None, None, None):
+        #     if mod != alias[-3:]:
+        #         db.update_EIN_modifiers_of_alias(alias[0], mod)
+            
 
 
 # check openrct files and get info about rides from there
