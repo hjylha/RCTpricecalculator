@@ -14,7 +14,19 @@ def db():
     path = Path(__file__).parent / 'test_rct_data.db'
     path.unlink()
 
-# 'empty' db with all tables
+# db with little stuff
+@pytest.fixture
+def dbs(db):
+    ride1 = ('Giga Coaster', 120, 51, 32, 10, 'GigaCoaster', 'Giga Coaster', None, None, None)
+    ride2 = ('Merry Go Round', 45, 50, 10, 0, 'MerryGoRound', 'Merry Go Round', 131, 60, 75)
+    ride3 = ('Swinging Ship', 35, 50, 30, 10, 'SwingingShip', 'Swinging Ship', 251, 245, 251)
+    ride4 = ('Hybrid Coaster', 120, 52, 36, 10, 'HybridCoaster', 'Hybrid Coaster', None, None, None)
+    for ride in (ride1, ride2, ride3, ride4):
+        db.add_ride(ride)
+        db.create_table_for_ride_ratings(ride[0])
+    return db
+
+# db with all tables and bunch of stuff
 @pytest.fixture
 def dbe(db):
     db_manage.generate_rides(db)
@@ -26,10 +38,10 @@ def dbe(db):
 def db0():
     return db_manage.DB(is_backup_db=True)
 
-# real db
-@pytest.fixture
-def db_actual():
-    return db_manage.DB()
+# real db, probably should not use
+# @pytest.fixture
+# def db_actual():
+#     return db_manage.DB()
 
 class TestManagement():
 
@@ -42,10 +54,10 @@ class TestManagement():
         assert (2, 'Carousel', 49, 'Merry Go Round', 0, None, None, None) in aliases
 
     # maybe a better test is needed here...
-    def test_aliases_not_in_alias_list(self, dbe):
-        dbe.add_alias('nonsense', 'Giga Coaster')
-        dbe.add_alias('Pirate Ship', 'Swinging Ship')
-        assert db_manage.aliases_not_in_alias_list(dbe) == ['nonsense']
+    def test_aliases_not_in_alias_list(self, dbs):
+        dbs.add_alias('nonsense', 'Giga Coaster')
+        dbs.add_alias('Pirate Ship', 'Swinging Ship')
+        assert db_manage.aliases_not_in_alias_list(dbs) == ['nonsense']
 
     def test_visible_names_not_in_db(self, db0):
         names = db_manage.visible_names_not_in_db(db0)
@@ -70,9 +82,14 @@ class TestManagement():
     def test_are_visible_names_accounted_for(self, db0):
         assert db_manage.are_visible_names_accounted_for(db0)
 
-    def test_update_visible_names(self, dbe):
-        left_out = db_manage.update_visible_names(dbe)
-        assert len(left_out) == 2
+    def test_update_visible_names(self, dbs):
+        visible_names = [item[0] for item in dbs.select_columns(DB.ride_table_name, ('visible_name',))]
+        assert 'Merry-Go-Round' not in visible_names
+        left_out = set(db_manage.update_visible_names(dbs))
+        # assert len(left_out) == 1
+        assert left_out == {'Hybrid Coaster', 'Swinging Ship'}
+        visible_names = [item[0] for item in dbs.select_columns(DB.ride_table_name, ('visible_name',))]
+        assert 'Merry-Go-Round' in visible_names
     
     def test_update_alias_info(self, dbe):
         pass
@@ -116,10 +133,10 @@ class TestGeneration():
             for rating in old_ratings:
                 assert rating in ratings
 
-    def test_import_aliases_from_old_db(self, dbe, db0):
-        db_manage.import_aliases_from_old_db(dbe, db0)
+    def test_import_aliases_from_old_db(self, db, db0):
+        db_manage.import_aliases_from_old_db(db, db0)
         old_aliases = [line[1:] for line in db0.select_all(DB.alias_table_name)]
-        aliases = [line [1:] for line in dbe.select_all(DB.alias_table_name)]
+        aliases = [line [1:] for line in db.select_all(DB.alias_table_name)]
         for alias in old_aliases:
             assert alias in aliases
 

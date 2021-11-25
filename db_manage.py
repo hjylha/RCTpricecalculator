@@ -76,8 +76,11 @@ def update_visible_names(db):
     for ride in ride_names:
         for alias in alias_list:
             if ride == alias[1] and alias[2] == 1:
-                db.update_visible_name(ride, alias[1])
-                break
+                # ride name and visible name should be similar
+                # possible issue: Pirate Ship/Swinging Ship
+                if alias[0].startswith(ride[:2]):
+                    db.update_visible_name(ride, alias[0])
+                    break
         else:
             not_updated.append(ride)
     return not_updated
@@ -85,7 +88,9 @@ def update_visible_names(db):
 
 # update alias info (visibility and EIN modifiers)
 def update_alias_info(db):
-    pass
+    alias_list = get_aliases_from_alias_file()
+    columns =('name', 'is_visible', 'excitement_modifier', 'intensity_modifier', 'nausea_modifier')
+    aliases = db.select_columns(DB.alias_table_name, ())
 
 
 # check openrct files and get info about rides from there
