@@ -4,28 +4,33 @@ no_match_text = 'No match found'
 
 
 # try to find ride names containing given text_input
-def get_suggestions_for_ride_name(text_input, ride_names, num_of_suggestions):
-    suggestions = []
+def get_suggestions_for_ride_name(text_input: str, ride_names: dict, num_of_suggestions: int) -> list:
+    suggestions = set()
     num = len(text_input)
     # match with start of ride name
-    for name in ride_names:
+    for name, vis_name in ride_names.items():
         if len(suggestions) >= num_of_suggestions:
-            return suggestions
+            # return list(suggestions)
+            break
         if name.lower().startswith(text_input.lower()):
-            suggestions.append(name)
+            # suggestions.append(name)
+            suggestions.add(vis_name)
     # match with any part of ride name
-    for name in ride_names:
+    for name, vis_name in ride_names.items():
         if len(suggestions) >= num_of_suggestions:
-            return suggestions
+            # return suggestions
+            break
         if len(name) > num:
             for i in range(1, len(name)- num + 1):
                 if name[i:].lower().startswith(text_input.lower()):
                     if name not in suggestions:
-                        suggestions.append(name)
+                        # suggestions.append(name)
+                        suggestions.add(vis_name)
     # if nothing found, that is the suggestion
-    if suggestions == []:
-        suggestions.append(no_match_text)
-    return suggestions
+    if suggestions == set():
+        # suggestions.append(no_match_text)
+        suggestions.add(no_match_text)
+    return list(suggestions)
 
 
 # if len(word) < num_of_letters, add two spaces for each 'missing' letter
