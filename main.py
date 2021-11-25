@@ -120,7 +120,7 @@ class RideTextBox(TextInputMod):
 
         # self.ride_names = read_ride_values().keys()
         dbf = DB()
-        self.ride_names = dbf.get_ride_names()
+        self.ride_names = dbf.get_ride_names_and_visible_names()
         self.dropdown = DropDown()
         self.no_match_text = no_match_text
         self.real_focus = False
