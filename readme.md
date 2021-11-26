@@ -5,9 +5,9 @@ Yes, this already exists at <https://rct2calc.shottysteve.com/> and probably oth
 
 ![Price Calculator window](pricecalculator.png)
 
-The calculator uses kivy for its GUI. More detailed list of dependencies can be found in *requirements.txt*.
+The calculator uses kivy for its GUI. Tests are done with pytest. More detailed list of dependencies can be found in *requirements.txt*.
 
-This app uses sqlite database to store the ride data used for price calculations. This data was taken from the [openRCT2](https://github.com/OpenRCT2/OpenRCT2) source code. The database is also used to store excitement-intensity-nausea (EIN) ratings of rides. These ratings are then used to set default EIN ratings for rides.
+This app uses a sqlite database to store the ride data used for price calculations. This data was taken from the [openRCT2](https://github.com/OpenRCT2/OpenRCT2) source code. The database is also used to store excitement-intensity-nausea (EIN) ratings of rides. These ratings are then used to set default EIN ratings for rides.
 
 To launch the calculator, type
 
@@ -15,6 +15,8 @@ To launch the calculator, type
 
 
 ### Some features
+
+* The app has keyboard shortcuts for clear (F2), save ratings to database (F5) and toggle pay-for-entry (CTRL+E)
 
 * The app tries to match given (parts of) ride names to those in the database and gives suggestions to make sure a match is found.
 
@@ -30,12 +32,16 @@ To launch the calculator, type
 
 ### Things to maybe add
 
-* Add more aliases and a better way to deal with them in name suggestions (i.e. only suggest one name for one ride)
+* Add more aliases and improve name suggestions
 
 * Emphasizing the first three lines in the pricetable, as they are the most important
 
 * More things to manage the database better
 
-* Making database functions less susceptible to errors
+<!-- * Making database functions less susceptible to errors -->
 
 * Handling different modes for rides (Top Spin, Motion Simulator, etc)
+
+* More selections to GUI: Set default values yourself? Always show default values? Show only first lines of pricetable? etc
+
+* Tests for GUI
