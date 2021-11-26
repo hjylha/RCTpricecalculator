@@ -60,7 +60,7 @@ def price_as_string(price: int) -> str:
 
 # the better the price, the greener the price
 # but mostly just kinda random color decisions
-def price_color(price):
+def price_color(price: int) -> tuple:
     # zero price is red
     if price == 0:
         return (1, 0, 0, 1)
@@ -72,7 +72,7 @@ def price_color(price):
         return (0, 0.75 + 0.01*mult, 0, 1)
     # less green, maybe blue
     if mult > 19:
-        return (0, 0.4 + 0.01*mult, 0.8 - 0.01*mult)
+        return (0, 0.4 + 0.01*mult, 0.8 - 0.01*mult, 1)
     # adding some red perhaps
     if mult > 4:
         return (0.4 - 0.01*mult, 0.02 * mult, 0.8 - 0.01*mult, 1)

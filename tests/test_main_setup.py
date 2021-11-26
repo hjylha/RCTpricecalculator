@@ -82,8 +82,68 @@ def test_price_as_string():
     assert '13.37' == main_setup.price_as_string(price)
 
 
+# colors are kinda random so...
 def test_price_color():
-    pass
+    # price 0 is very red
+    price = 0
+    assert (1, 0, 0, 1) == main_setup.price_color(price)
+
+    # big prices (>=1000) should be green
+    # previous_green = 0.74
+    previous_rgb = [0, 0.74, 0]
+    for price in range(1000, 2001, 40):
+        # price = 40 * i + 1000
+        color_tuple = main_setup.price_color(price)
+        assert color_tuple[0] == previous_rgb[0]
+        assert color_tuple[1] > previous_rgb[1]
+        assert color_tuple[1] <= 1
+        # previous_rgb[1] = color_tuple[1]
+        assert color_tuple[2] == previous_rgb[2]
+        previous_rgb = [*color_tuple]
+        # transparency or whatever should be 1
+        assert color_tuple[-1] == 1
+    
+    # less green and more blue for prices between 400 and 1000
+    # previous_green = 0.59
+    # previous_blue = 0.61
+    previous_rgb = [0, 0.59, 0.61]
+    for price in range(400, 1000, 20):
+        # price = 20 * i + 400
+        color_tuple = main_setup.price_color(price)
+        assert color_tuple[0] == previous_rgb[0]
+        assert color_tuple[1] > previous_rgb[1]
+        assert color_tuple[1] <= 0.89
+        # previous_rgb[1] = color_tuple[1]
+        assert color_tuple[2] < previous_rgb[2]
+        assert color_tuple[2] >= 0.31
+        # previous_rgb[2] = color_tuple[2]
+        previous_rgb = [*color_tuple]
+        assert color_tuple[-1] == 1
+    
+    # red comes into play from 100 to 400
+    previous_rgb = [0.36, 0.09, 0.76]
+    for price in range(100, 400, 20):
+        color_tuple = main_setup.price_color(price)
+        assert color_tuple[0] < previous_rgb[0]
+        assert color_tuple[0] >= 0.2
+        assert color_tuple[1] > previous_rgb[1]
+        assert color_tuple[1] < 0.4
+        assert color_tuple[2] < previous_rgb[2]
+        assert color_tuple[2] > 0.6
+        previous_rgb = [*color_tuple]
+        assert color_tuple[-1] == 1
+    
+    # under 100
+    previous_rgb = [0.91, 0, 0.39]
+    for price in range(20, 100, 20):
+        color_tuple = main_setup.price_color(price)
+        assert color_tuple[0] < previous_rgb[0]
+        assert color_tuple[0] > 0.4
+        assert color_tuple[1] == previous_rgb[1]
+        assert color_tuple[2] > previous_rgb[2]
+        assert color_tuple[2] < 0.9
+        previous_rgb = [*color_tuple]
+        assert color_tuple[-1] == 1
 
 
 def test_get_EIN_value():
