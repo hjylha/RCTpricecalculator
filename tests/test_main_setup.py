@@ -147,8 +147,41 @@ def test_price_color():
 
 
 def test_get_EIN_value():
-    pass
+    for value in range(0, 2500, 137):
+        assert main_setup.get_EIN_value(str(value)) == value
+    for num in range(15, 100, 7):
+        value = f'3.{str(num)}'
+        assert main_setup.get_EIN_value(str(value), True) == 300 + num
+        value = f'3,{str(num)}'
+        assert main_setup.get_EIN_value(str(value), True) == 300 + num
+    value = ''
+    assert main_setup.get_EIN_value(str(value)) == 0
+    value = '3.55.h'
+    assert main_setup.get_EIN_value(str(value)) == 0
+    value = '3.55.7'
+    assert main_setup.get_EIN_value(str(value), True) == 0
 
 
 def test_get_EIN_values():
-    pass
+    ein_inputs = ('350', '250', '200')
+    assert main_setup.get_EIN_values(ein_inputs) == (350, 250, 200)
+
+    # decimals work
+    ein_inputs = ('3.50', '2.50', '2.00')
+    assert main_setup.get_EIN_values(ein_inputs) == (350, 250, 200)
+    ein_inputs = ('3.50', '250', '2.00')
+    assert main_setup.get_EIN_values(ein_inputs) == (350, 25000, 200)
+
+    # same with comma instead of period
+    ein_inputs = ('3,50', '2,50', '2,00')
+    assert main_setup.get_EIN_values(ein_inputs) == (350, 250, 200)
+    ein_inputs = ('3,50', '250', '2,00')
+    assert main_setup.get_EIN_values(ein_inputs) == (350, 25000, 200)
+
+    # say no to troll inputs
+    ein_inputs = ('.gh', '250', '200')
+    assert main_setup.get_EIN_values(ein_inputs) == (0, 250, 200)
+    # nobody should type 0 as a decimal
+    ein_inputs = ('0.00', '250', '200')
+    assert main_setup.get_EIN_values(ein_inputs) == (0, 250, 200)
+

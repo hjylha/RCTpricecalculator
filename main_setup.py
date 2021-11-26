@@ -82,9 +82,15 @@ def price_color(price: int) -> tuple:
 
 
 # turn inputted EIN value into correct form
-def get_EIN_value(input_value, is_float=False):
+def get_EIN_value(input_value: str, is_float=False) -> int:
     # if real (float) value is used, multiply it by 100
     if is_float:
+        if ',' in input_value:
+            comma = input_value.index(",")
+            try:
+                input_value = f'{input_value[:comma]}.{input_value[comma+1:]}'
+            except IndexError:
+                input_value = f'{input_value[:-1]}.'
         try:
             return int(float(input_value) * 100)
         except ValueError:
@@ -95,9 +101,11 @@ def get_EIN_value(input_value, is_float=False):
         return 0
 
 # EIN_inputs = (e, i, n)
-def get_EIN_values(EIN_inputs):
+def get_EIN_values(EIN_inputs: tuple) -> tuple:
     # if float values are used
-    if ('.' in EIN_inputs[0] or '.' in EIN_inputs[1] or '.' in EIN_inputs[2]):
-        return tuple([get_EIN_value(ein_value, True) for ein_value in EIN_inputs])
+    # if ('.' in EIN_inputs[0] or '.' in EIN_inputs[1] or '.' in EIN_inputs[2]):
+    for input in EIN_inputs:
+        if ('.' in input or ',' in input) and get_EIN_value(input, True):
+            return tuple([get_EIN_value(ein_value, True) for ein_value in EIN_inputs])
     # otherwise, we assume EIN is the real value multiplied by 100
     return tuple([get_EIN_value(ein_value) for ein_value in EIN_inputs])
