@@ -22,7 +22,7 @@ def apply_age_to_ride_value(ride_value : int, age_modifiers : dict) -> int:
 
 # if there are many rides of the same type, value drops to 3/4
 def apply_many_rides_modifier(modified_value : int) -> int:
-    return 3 * modified_value // 4
+    return modified_value - modified_value // 4
 
 # if guests have to pay for entering the park value drops to 1/4
 def apply_pay_for_entry(modified_value : int) -> int:
