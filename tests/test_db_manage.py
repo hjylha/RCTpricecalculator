@@ -1,15 +1,17 @@
 from os import name
 from pathlib import Path
+from tkinter.messagebox import NO
 import pytest
 
 import fix_imports
+import get_data
 import db_manage
 from db_manage import DB
 
 # 'empty' db
 @pytest.fixture
 def db():
-    yield db_manage.DB(testing=True)
+    yield DB(testing=True)
     # remove db after use?
     path = Path(__file__).parent / 'test_rct_data.db'
     path.unlink()
@@ -30,23 +32,27 @@ def dbs(db):
 # db with all tables and bunch of stuff
 @pytest.fixture
 def dbe(db):
-    db_manage.generate_rides(db)
-    db_manage.generate_age_modifiers(db)
+    if get_data.openrct2_path.exists():
+        db_manage.generate_rides(db)
+        db_manage.generate_age_modifiers(db)
+    else:
+        return None
     return db
 
 # 'full' db
 @pytest.fixture
 def db0():
-    return db_manage.DB(is_backup_db=True)
+    return DB(is_backup_db=True)
 
 # real db, probably should not use
 # @pytest.fixture
 # def db_actual():
-#     return db_manage.DB()
+#     return DB()
 
 class TestManagement():
 
     def test_add_aliases_from_alias_list(self, dbe):
+        assert dbe is not None
         # alias table should be empty
         assert not dbe.select_all(DB.alias_table_name)
         db_manage.add_aliases_from_alias_list(dbe)
@@ -113,6 +119,7 @@ class TestManagement():
 class TestGeneration():
 
     def test_generate_rides(self, db):
+        assert get_data.openrct2_path.exists()
         db_manage.generate_rides(db, False)
         rides = db.select_all(DB.ride_table_name)
         assert len(rides) == 79
@@ -120,6 +127,7 @@ class TestGeneration():
         assert DB.table_name_for_EIN_ratings('Go Karts') not in db.tables
 
     def test_generate_rides_and_ein_tables(self, db):
+        assert get_data.openrct2_path.exists()
         db_manage.generate_rides(db)
         rides = db.select_all(DB.ride_table_name)
         assert len(rides) == 79
@@ -129,6 +137,7 @@ class TestGeneration():
             assert db.select_all(DB.table_name_for_EIN_ratings(name)) is not None
 
     def test_generate_age_modifiers(self, db):
+        assert get_data.openrct2_path.exists()
         # make sure there is nothing in the age modifiers table
         assert db.select_all(DB.age_table_name) == []
         db_manage.generate_age_modifiers(db)
@@ -138,6 +147,7 @@ class TestGeneration():
         assert age_mod['new'][9] == {'from': 200, 'to': '', 'multiplier': 9, 'divisor': 16, 'addition': 0}
 
     def test_import_ratings_from_old_db(self, dbe, db0):
+        assert dbe is not None
         db_manage.import_ratings_from_old_db(dbe, db0)
         EIN_tables = [line[0] for line in dbe.select_columns(DB.ride_table_name, ('EIN_table_name',))]
         for table in EIN_tables:
@@ -156,6 +166,7 @@ class TestGeneration():
             assert alias in aliases
 
     def test_generate_clean_db(self, db):
+        assert get_data.openrct2_path.exists()
         db_manage.generate_clean_db(db)
         rides = db.select_all(DB.ride_table_name)
         assert len(rides) == 79
