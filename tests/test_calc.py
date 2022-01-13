@@ -1,3 +1,5 @@
+import pytest
+
 import fix_imports
 
 import calc
@@ -11,27 +13,48 @@ def test_calculate_ride_value():
     assert calc.calculate_ride_value(EIN_modifiers, EIN) == 59
 
 
-def test_apply_age_to_ride_value():
-    age_mod = {'from': 0, 'to': 5, 'multiplier': 3, 'divisor': 2, 'addition': 0}
-    assert calc.apply_age_to_ride_value(59, age_mod) == 88
-    age_mod2 = {'from': 128, 'to': 200, 'multiplier': 81, 'divisor': 1024, 'addition': 0}
-    assert calc.apply_age_to_ride_value(59, age_mod2) == 4
+@pytest.mark.parametrize(
+    'fr, to, multi, div, addition, base_value, value', [
+        (0, 5, 3, 2, 0, 59, 88),
+        (128, 200, 81, 1024, 0, 59, 4)
+    ]
+)
+def test_apply_age_to_ride_value(fr, to, multi, div, addition, base_value, value):
+    age_mod = {'from': fr, 'to': to, 'multiplier': multi, 'divisor': div, 'addition': addition}
+    assert calc.apply_age_to_ride_value(base_value, age_mod) == value
 
 
-def test_apply_many_rides_modifier():
-    assert calc.apply_many_rides_modifier(88) == 66
-    assert calc.apply_many_rides_modifier(27) == 20
+@pytest.mark.parametrize(
+    'ride_value, resulting_value', [
+        (88, 66),
+        (27, 21)
+    ]
+)
+def test_apply_many_rides_modifier(ride_value, resulting_value):
+    assert calc.apply_many_rides_modifier(ride_value) == resulting_value
+    # this was incorrect
+    # assert calc.apply_many_rides_modifier(27) == 20
 
 
-def test_apply_pay_for_entry():
-    assert calc.apply_pay_for_entry(88) == 22
-    assert calc.apply_pay_for_entry(27) == 6
+@pytest.mark.parametrize(
+    'ride_value, resulting_value', [
+        (88, 22),
+        (27, 6)
+    ]
+)
+def test_apply_pay_for_entry(ride_value, resulting_value):
+    assert calc.apply_pay_for_entry(ride_value) == resulting_value
 
 
-def test_maximize_price():
-    assert calc.maximize_price(88) == 1760
-    assert calc.maximize_price(105) == 2000
-    assert calc.maximize_price(4) == 80
+@pytest.mark.parametrize(
+    'ride_value, price', [
+        (88, 1760),
+        (105, 2000),
+        (4, 80)
+    ]
+)
+def test_maximize_price(ride_value, price):
+    assert calc.maximize_price(ride_value) == price
 
 
 def test_calc_max_prices():
