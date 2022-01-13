@@ -4,7 +4,8 @@ import db_ini
 
 # tables = ['rides', 'age_modifiers', 'aliases', 'individual_ride_tables']
 # this should be a path in db.ini
-path = db_ini.Path('C:\\Ohjelmointiprojekteja\\PythonProjects\\RCTpricecalculator\\rct_data.db')
+# path = db_ini.Path('C:\\Ohjelmointiprojekteja\\PythonProjects\\RCTpricecalculator\\rct_data.db')
+path = db_ini.Path(__file__).parent.parent / 'rct_data.db'
 
 
 def test_make_sure_path_is_absolute():
