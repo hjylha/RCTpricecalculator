@@ -1,6 +1,5 @@
 from os import name
 from pathlib import Path
-from tkinter.messagebox import NO
 import pytest
 
 import fix_imports
