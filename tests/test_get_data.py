@@ -1,6 +1,13 @@
+import pytest
+
 import fix_imports
 
 import get_data
+
+
+# @pytest.fixture(scope='module')
+# def openrct_path():
+#     return get_data.openrct2_path
 
 
 # test getting EIN multipliers and ridebonusvalue
@@ -21,6 +28,7 @@ class TestGetRideProperties():
 
     def test_get_ride_data_from_file(self):
         filepath = get_data.Path('C:\\Ohjelmointiprojekteja\\c++projects\\OpenRCT2\\src\\openrct2\\ride\\coaster\\meta\\GigaCoaster.h')
+        assert filepath.exists()
         with open(filepath, 'r') as f:
             ride_data = get_data.get_ride_data_from_file(f)
         assert ride_data[0] == (51, 32, 10)
@@ -33,6 +41,7 @@ class TestGetRideProperties():
         assert get_data.add_spaces_to_ride_names('LIMLaunchedRollerCoaster') == 'LIM Launched Roller Coaster'
 
     def test_get_ride_data_from_files(self):
+        assert get_data.openrct2_path.exists()
         rides = get_data.get_ride_data_from_files()
         assert 'Giga Coaster' in rides
         assert rides['Giga Coaster'] == ((51, 32, 10), 120)
@@ -49,6 +58,7 @@ class TestGetAgeModifiers():
 
     def test_get_age_table(self):
         path = get_data.Path('C:\\Ohjelmointiprojekteja\\c++projects\\OpenRCT2\\src\\openrct2\\ride\\RideRatings.cpp')
+        assert path.exists()
         with open(path, 'r') as f:
             age_dict = get_data.get_age_table(f)
         assert 'new' in age_dict
@@ -57,6 +67,7 @@ class TestGetAgeModifiers():
         assert age_dict['new'][8][2] == 1024
 
     def test_get_age_modifiers_from_file(self):
+        assert get_data.openrct2_path.exists()
         age_dict = get_data.get_age_modifiers_from_file()
         assert 'new' in age_dict
         assert 'old' in age_dict
@@ -66,6 +77,7 @@ class TestGetAgeModifiers():
 
 # test getting visible names
 def test_get_visible_names_from_file():
+    assert get_data.visible_names_file.exists()
     # filepath = get_data.Path(__file__).parent.parent / 'data' / 'visible_names.txt'
     # filepath = get_data.Path('data/visible_names.txt')
     names = get_data.get_visible_names_from_file()
@@ -77,6 +89,7 @@ def test_get_visible_names_from_file():
     assert set(names['Transport Rides']) == t_rides
 
 def test_write_visible_names_to_file():
+    assert get_data.visible_names_file.exists()
     data_folder = get_data.Path(__file__).parent.parent / 'data'
     # filepath_og = data_folder / 'visible_names.txt'
     # filepath_og = get_data.Path('data/visible_names.txt')
@@ -94,6 +107,7 @@ def test_write_visible_names_to_file():
     filepath.unlink()
 
 def test_get_aliases_from_alias_file():
+    assert get_data.alias_file_path.exists()
     # filepath = get_data.Path(__file__).parent.parent / 'data' / 'alias_list.csv'
     aliases = get_data.get_aliases_from_alias_file()
     alias_names = [line[0] for line in aliases]
@@ -121,6 +135,7 @@ def test_get_numbers_from_text():
     assert get_data.get_numbers_from_text(text) == None
 
 def test_get_aliases_from_missing_rides():
+    assert get_data.missing_rides_path.exists()
     aliases = get_data.get_aliases_from_missing_rides()
     assert ('Carousel', 'Merry Go Round', None) in aliases
     assert ('Flower Power Ride', 'Flying Saucers', 75, 40, 10) in aliases

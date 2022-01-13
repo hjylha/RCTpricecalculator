@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import final
 
 '''functions to get ride values and age modifiers from openrct2 source'''
 openrct2_path = Path('C:\\Ohjelmointiprojekteja\\c++projects\\OpenRCT2')
