@@ -4,7 +4,6 @@ import db_ini
 
 # tables = ['rides', 'age_modifiers', 'aliases', 'individual_ride_tables']
 # this should be a path in db.ini
-# path = db_ini.Path('C:\\Ohjelmointiprojekteja\\PythonProjects\\RCTpricecalculator\\rct_data.db')
 path = db_ini.Path(__file__).parent.parent / 'rct_data.db'
 
 
@@ -14,7 +13,6 @@ def test_make_sure_path_is_absolute():
 
 def test_get_db_path():
     db_paths = db_ini.get_db_path(False)
-    # path = db_ini.Path('C:\\Ohjelmointiprojekteja\\PythonProjects\\RCTpricecalculator\\rct_data.db')
     assert path in db_paths
     assert path.parent / 'rct_data_backup.db' in db_paths
     # test db
@@ -65,6 +63,5 @@ def test_get_columns_for_tables():
 def test_get_db_info():
 
     db_info = db_ini.get_db_info()
-    # path = db_ini.Path('C:\\Ohjelmointiprojekteja\\PythonProjects\\RCTpricecalculator\\rct_data.db')
     assert path in db_info['filepaths']
     assert db_info['table_data']['individual_ride_tables']['timestamp'][0] == 'INTEGER'

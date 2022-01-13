@@ -1,9 +1,6 @@
 from pathlib import Path
 '''read the file db.ini and extract the info there'''
 
-# print(Path(__file__).resolve().parent)
-# path = Path('data/nothing_here.txt')
-# print(Path(__file__).resolve().parent.joinpath(path))
 
 # this file (db_ini.py) and db.ini should be in the same directory
 ini_file = Path(__file__).resolve().parent / 'db.ini'
