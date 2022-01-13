@@ -43,10 +43,18 @@ def db():
     return DB(is_backup_db=True)
 
 
-def test_table_name_for_EIN_ratings():
-    assert DB.table_name_for_EIN_ratings('3D Cinema') == 'Cinema'
-    assert DB.table_name_for_EIN_ratings('Lay Down Roller Coaster') == 'LayDownRollerCoaster'
-    assert DB.table_name_for_EIN_ratings('Merry Go Round') == 'MerryGoRound'
+@pytest.mark.parametrize(
+    'ride_name, table_name', [
+        ('3D Cinema', 'Cinema'),
+        ('Lay Down Roller Coaster', 'LayDownRollerCoaster'),
+        ('Merry Go Round', 'MerryGoRound')
+    ]
+)
+def test_table_name_for_EIN_ratings(ride_name, table_name):
+    assert DB.table_name_for_EIN_ratings(ride_name) == table_name
+    # assert DB.table_name_for_EIN_ratings('3D Cinema') == 'Cinema'
+    # assert DB.table_name_for_EIN_ratings('Lay Down Roller Coaster') == 'LayDownRollerCoaster'
+    # assert DB.table_name_for_EIN_ratings('Merry Go Round') == 'MerryGoRound'
 
 
 def test_ride_row_as_dict():
@@ -113,12 +121,23 @@ def test_get_ride_names(db):
         assert 'Pirate Ship' in ride_names
         assert 'Water Slide' in ride_names
 
-def test_get_ride_names_and_visible_names(db):
-    names = db.get_ride_names_and_visible_names()
-    assert names['Giga Coaster'] == 'Giga Coaster'
-    assert names['Merry Go Round'] == 'Merry-Go-Round'
-    assert names['Water Slide'] == 'Dinghy Slide'
-    assert names['Roto-Drop'] == 'Roto-Drop'
+
+# get ride names and visible names once and then check what it contains
+@pytest.fixture
+def names(db):
+    return db.get_ride_names_and_visible_names()
+
+@pytest.mark.parametrize(
+    'ride_name, visible_name', [
+        ('Giga Coaster',  'Giga Coaster'),
+        ('Merry Go Round', 'Merry-Go-Round'),
+        ('Water Slide', 'Dinghy Slide'),
+        ('Roto-Drop', 'Roto-Drop')
+    ]
+)
+def test_get_ride_names_and_visible_names(names, ride_name, visible_name):
+    assert names[ride_name] == visible_name
+
 
 def test_get_age_ranges(db):
     age_ranges = db.get_age_ranges()
@@ -154,11 +173,16 @@ def test_find_ride_info(db):
     assert ride_info['visible_name'] == 'Monorail'
 
 
-def test_find_og_name_of_ride(db):
-    names = ['pirate ship', 'Giga coaster', 'Water Slide']
-    og_names = ['Swinging Ship', 'Giga Coaster', 'Dinghy Slide']
-    for name, og_name in zip(names, og_names):
-        assert db.find_og_name_of_ride(name) == og_name
+@pytest.mark.parametrize(
+    'name, og_name', [
+        ('pirate ship', 'Swinging Ship'),
+        ('Giga coaster', 'Giga Coaster'),
+        ('Water Slide', 'Dinghy Slide')
+    ]
+)
+def test_find_og_name_of_ride(db, name, og_name):
+    assert db.find_og_name_of_ride(name) == og_name
+
 
 def test_get_ride_rowid(db):
     ride_name = 'Haunted House'
@@ -336,15 +360,23 @@ def test_set_average_values_as_default_for_all(db2):
     assert ride_data[1][-3:] == (120, 50, 55)
 
 
-def test_calculate_max_prices(db):
+@pytest.mark.parametrize(
+    'free_entry, index, prices', [
+        (True, 0, (1760, 1320, 1780,  1340)),
+        (True, 5, (480, 360, 480, 360)),
+        (False, 0, (440, 340, 440, 340)),
+        (False, 5, (120, 100, 120, 100))
+    ]
+)
+def test_calculate_max_prices(db, free_entry, index, prices):
     ride = 'Giga Coaster'
     EIN = (800, 550, 400)
-    max_prices = db.calculate_max_prices(ride, EIN, True)
-    assert max_prices[0] == (1760, 1320, 1780, 1320)
-    assert max_prices[5] == (480, 360, 480, 360)
-    max_prices = db.calculate_max_prices(ride, EIN, False)
-    assert max_prices[0] == (440, 320, 440, 320)
-    assert max_prices[5] == (120, 80, 120, 80)
+    # max_prices = db.calculate_max_prices(ride, EIN, True)
+    max_prices = db.calculate_max_prices(ride, EIN, free_entry)
+    assert max_prices[index] == prices
+    # # assert max_prices[0] == (1760, 1320, 1780, 1320)
+    # # assert max_prices[0] == (440, 320, 440, 320)
+    # # assert max_prices[5] == (120, 80, 120, 80)
 
 # TODO
 def test_write_main_tables_to_csv_file(db):
